@@ -17,3 +17,5 @@ demos/
 ```
 
 Each page contains its own HTML, CSS, and vanilla JavaScript. No package installation or build step is required.
+
+GitHub Pages publishes the files directly from the root of the `main` branch.
