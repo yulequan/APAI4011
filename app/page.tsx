@@ -7,7 +7,7 @@ const demos = [
       'Edit the feature values, inspect every gradient calculation, and run multiple logistic-regression updates.',
     topic: 'Logistic regression',
     chapter: 'J&M · Section 4.6.3',
-    href: '/demos/logistic-gradient-descent',
+    href: './demos/logistic-gradient-descent/',
   },
 ];
 

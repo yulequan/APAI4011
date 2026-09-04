@@ -562,7 +562,7 @@ export default function Home() {
           </p>
         </div>
         <div className="header-actions">
-          <a className="source-link home-link" href="/">
+          <a className="source-link home-link" href="../../">
             <ArrowLeft aria-hidden="true" />
             All demos
           </a>

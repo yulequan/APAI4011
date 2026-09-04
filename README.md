@@ -4,7 +4,8 @@ Interactive teaching demos for APAI4011 Natural Language Processing.
 
 ## Demos
 
-- [Gradient Descent, Step by Step](https://logistic-gradient-step-demo.medai3-hku.chatgpt.site/demos/logistic-gradient-descent)
+- [Demo collection](https://yulequan.github.io/APAI4011/)
+- [Gradient Descent, Step by Step](https://yulequan.github.io/APAI4011/demos/logistic-gradient-descent/)
 
 ## Local development
 
@@ -14,3 +15,7 @@ pnpm dev
 ```
 
 Open `http://localhost:3000` for the demo collection.
+
+## GitHub Pages
+
+Every update to `main` automatically builds and deploys the static site through GitHub Actions.
