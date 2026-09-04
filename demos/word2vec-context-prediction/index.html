@@ -1,0 +1,1160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Train a tiny Skip-gram Word2Vec model step by step and watch its word embeddings change.">
+  <title>Word2Vec: From Context to Embeddings · APAI4011</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #102a43;
+      --muted: #5b7083;
+      --teal: #0b7285;
+      --teal-dark: #075f6f;
+      --teal-soft: #e7f6f7;
+      --orange: #d65f37;
+      --orange-soft: #fff0e9;
+      --green: #197046;
+      --line: #c7d7df;
+      --page: #f3f7f9;
+      --card: rgba(255, 255, 255, .92);
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --serif: Georgia, "Times New Roman", serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { background: var(--page); }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 7% 4%, rgba(34, 166, 179, .11), transparent 27rem),
+        radial-gradient(circle at 94% 18%, rgba(214, 95, 55, .07), transparent 24rem),
+        linear-gradient(180deg, #fbfcfd 0%, var(--page) 76%);
+      color: var(--ink);
+      font-family: Aptos, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button, select, input[type="range"] { cursor: pointer; }
+
+    main {
+      width: min(1500px, 100%);
+      margin: 0 auto;
+      padding: 1.8rem clamp(1rem, 3.5vw, 4rem) 1.5rem;
+    }
+
+    h1, h2, h3 {
+      font-family: var(--serif);
+      letter-spacing: -.025em;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 4vw, 4rem);
+      line-height: 1.02;
+    }
+
+    .eyebrow {
+      margin: 0 0 .42rem;
+      color: var(--teal);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .105em;
+      text-transform: uppercase;
+    }
+
+    .site-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 2rem;
+      margin-bottom: 1.45rem;
+    }
+
+    .header-copy {
+      max-width: 54rem;
+      margin: .72rem 0 0;
+      color: var(--muted);
+      font-size: 1.04rem;
+      line-height: 1.5;
+    }
+
+    .header-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: .6rem;
+      flex-wrap: wrap;
+    }
+
+    .pill-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.7rem;
+      padding: .67rem .95rem;
+      border: 1px solid #b8cbd5;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .78);
+      color: #24485d;
+      font-size: .88rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: 160ms ease;
+    }
+
+    .pill-link:hover, .pill-link:focus-visible {
+      border-color: var(--teal);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .idea-strip {
+      display: grid;
+      grid-template-columns: auto 1fr auto 1fr auto;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 1rem;
+      padding: .85rem 1rem;
+      border: 1px solid #bfd7df;
+      border-radius: 1rem;
+      background: rgba(238, 249, 250, .88);
+      color: #315568;
+      font-size: .92rem;
+    }
+
+    .idea-strip strong { color: var(--teal-dark); }
+    .idea-arrow { color: #7a929f; font-size: 1.2rem; }
+
+    .step-nav {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(7.1rem, 1fr));
+      gap: .5rem;
+      overflow-x: auto;
+      padding-bottom: .5rem;
+    }
+
+    .step-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .48rem;
+      min-height: 2.65rem;
+      border: 1px solid #cbd9e1;
+      border-radius: .72rem;
+      background: rgba(255, 255, 255, .76);
+      color: #647a8c;
+      font-size: .8rem;
+      font-weight: 750;
+      white-space: nowrap;
+      transition: 150ms ease;
+    }
+
+    .step-button span {
+      display: grid;
+      width: 1.38rem;
+      height: 1.38rem;
+      place-items: center;
+      border-radius: 50%;
+      background: #e7eef2;
+      color: #486173;
+      font-size: .7rem;
+    }
+
+    .step-button:hover, .step-button:focus-visible { border-color: #22a6b3; outline: none; }
+    .step-button.active { border-color: var(--teal); background: var(--teal); color: white; box-shadow: 0 8px 22px rgba(11, 114, 133, .17); }
+    .step-button.active span { background: #c8eef0; color: #075a69; }
+    .step-button.done { border-color: #a8d6d9; background: #e8f7f7; color: #146c78; }
+
+    .progress-track {
+      height: .27rem;
+      margin: .03rem 0 1.1rem;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #dce8ed;
+    }
+
+    .progress-bar { height: 100%; background: linear-gradient(90deg, #22a6b3, var(--teal)); transition: width 180ms ease; }
+
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: minmax(20rem, .78fr) minmax(37rem, 1.5fr);
+      gap: 1.1rem;
+      align-items: stretch;
+    }
+
+    .panel, .stage, .visual-section, .history-section {
+      border: 1px solid var(--line);
+      border-radius: 1.2rem;
+      background: var(--card);
+      box-shadow: 0 17px 48px rgba(30, 64, 85, .075);
+    }
+
+    .panel { padding: 1.15rem; }
+    .panel-heading, .control-heading, .pair-heading, .training-heading, .stage-topline, .stage-controls, .visual-heading, .history-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .8rem;
+    }
+
+    .chip {
+      padding: .38rem .62rem;
+      border-radius: 999px;
+      background: #dff4e9;
+      color: var(--green);
+      font-size: .74rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .subpanel {
+      margin-top: .82rem;
+      padding: .9rem;
+      border: 1px solid #d5e1e6;
+      border-radius: .9rem;
+      background: #f8fbfc;
+    }
+
+    .subpanel label, .training-title { font-weight: 800; }
+    .support-copy { margin: .22rem 0 0; color: #697f8f; font-size: .74rem; line-height: 1.38; }
+
+    textarea {
+      width: 100%;
+      min-height: 7rem;
+      margin-top: .65rem;
+      padding: .72rem;
+      resize: vertical;
+      border: 1px solid #bdced7;
+      border-radius: .65rem;
+      background: white;
+      color: #193c50;
+      font-family: var(--mono);
+      font-size: .8rem;
+      line-height: 1.5;
+    }
+
+    textarea:focus, select:focus, input:focus { border-color: var(--teal); outline: 3px solid rgba(34, 166, 179, .13); }
+
+    .compact-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .65rem;
+      margin-top: .7rem;
+    }
+
+    select {
+      width: 100%;
+      min-height: 2.45rem;
+      margin-top: .35rem;
+      padding: .4rem .55rem;
+      border: 1px solid #bdced7;
+      border-radius: .58rem;
+      background: white;
+      color: var(--ink);
+    }
+
+    .eta-value, .counter-chip {
+      padding: .35rem .55rem;
+      border-radius: .58rem;
+      background: #123b50;
+      color: white;
+      font-family: var(--mono);
+      font-size: .75rem;
+      white-space: nowrap;
+    }
+
+    input[type="range"] { width: 100%; margin: .85rem 0 .1rem; accent-color: var(--teal); }
+    .slider-scale { display: flex; justify-content: space-between; color: #718596; font-size: .65rem; }
+
+    .action-button, .icon-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.55rem;
+      padding: .62rem .85rem;
+      border: 1px solid var(--teal);
+      border-radius: .66rem;
+      background: var(--teal);
+      color: white;
+      font-weight: 800;
+      transition: 150ms ease;
+    }
+
+    .action-button:hover:not(:disabled), .action-button:focus-visible:not(:disabled), .icon-button:hover:not(:disabled), .icon-button:focus-visible:not(:disabled) {
+      border-color: var(--teal-dark);
+      background: var(--teal-dark);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .action-button.secondary, .icon-button {
+      border-color: #c5d6de;
+      background: white;
+      color: #284c5b;
+    }
+
+    .action-button.secondary:hover, .icon-button:hover { border-color: #8bb8c1; background: #e9f5f6; }
+    .action-button:disabled, .icon-button:disabled { cursor: not-allowed; opacity: .45; }
+    .full-button { width: 100%; margin-top: .65rem; }
+
+    .status-message {
+      min-height: 1.15rem;
+      margin: .45rem 0 0;
+      color: #667d8e;
+      font-size: .72rem;
+    }
+
+    .status-message.error { color: #a64130; font-weight: 700; }
+
+    .pair-buttons { display: flex; gap: .4rem; }
+    .icon-button { width: 2.35rem; min-height: 2.2rem; padding: .35rem; }
+
+    .sentence-view {
+      display: flex;
+      min-height: 4.5rem;
+      align-items: center;
+      justify-content: center;
+      gap: .38rem;
+      margin-top: .7rem;
+      padding: .75rem;
+      border-radius: .72rem;
+      background: #eef4f6;
+      flex-wrap: wrap;
+    }
+
+    .token {
+      padding: .4rem .53rem;
+      border-radius: .48rem;
+      color: #506a7b;
+      font-family: var(--mono);
+      font-size: .83rem;
+    }
+
+    .token.center { background: var(--teal); color: white; font-weight: 800; }
+    .token.context { background: var(--orange); color: white; font-weight: 800; }
+
+    .pair-equation {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: .5rem;
+      margin-top: .65rem;
+      text-align: center;
+    }
+
+    .word-badge { padding: .52rem; border-radius: .58rem; font-family: var(--mono); font-size: .82rem; font-weight: 800; }
+    .word-badge.center { background: var(--teal-soft); color: var(--teal-dark); }
+    .word-badge.context { background: var(--orange-soft); color: #a5482d; }
+    .pair-arrow { color: #7b929f; }
+
+    .training-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-top: .72rem; }
+    .training-buttons .wide { grid-column: 1 / -1; }
+
+    .text-button {
+      margin-top: .62rem;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: #526c7e;
+      font-size: .73rem;
+      font-weight: 700;
+    }
+
+    .text-button:hover { color: var(--teal); }
+
+    .stage {
+      display: flex;
+      min-height: 39rem;
+      flex-direction: column;
+      padding: clamp(1.25rem, 2.5vw, 2rem);
+    }
+
+    .stage-topline { color: #60788a; font-size: .76rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .stage-topline span:first-child { color: var(--teal); }
+
+    .stage h2 { margin: .68rem 0 1rem; font-size: clamp(1.75rem, 3vw, 2.65rem); line-height: 1.08; }
+
+    .equation-stack { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+    .equation-block, .result-block, .meaning-card, .teaching-note { border-radius: .9rem; }
+
+    .equation-block {
+      min-height: 7rem;
+      padding: .92rem;
+      border: 1px solid #d1dfe5;
+      background: #f4f8fa;
+    }
+
+    .equation-block.substitution { border-color: #c3e2e3; background: #e9f6f7; }
+    .block-label { display: block; margin-bottom: .55rem; color: #6c8191; font-size: .7rem; font-weight: 800; letter-spacing: .075em; text-transform: uppercase; }
+
+    .equation-block code {
+      display: flex;
+      min-height: 3.55rem;
+      align-items: center;
+      overflow-wrap: anywhere;
+      color: #153c52;
+      font-family: var(--mono);
+      font-size: clamp(.82rem, 1.45vw, 1.05rem);
+      font-weight: 700;
+      line-height: 1.5;
+      white-space: normal;
+    }
+
+    .result-block {
+      grid-column: 1 / -1;
+      padding: .92rem 1.1rem;
+      background: #123b50;
+      color: white;
+    }
+
+    .result-block .block-label { color: #9fdde0; }
+    .result-block strong { display: block; overflow-wrap: anywhere; font-family: var(--mono); font-size: clamp(1.1rem, 2vw, 1.7rem); letter-spacing: -.02em; }
+
+    .meaning-card, .teaching-note { margin-top: .72rem; padding: .85rem .95rem; border: 1px solid #d5e1e6; background: white; }
+    .meaning-card p, .teaching-note p { margin: 0; color: #405e70; line-height: 1.48; }
+    .teaching-note { border-color: #f0c9ad; background: #fff5ed; }
+    .teaching-note .block-label { color: #a04c2c; }
+    .teaching-note p { color: #78452f; font-size: .87rem; }
+
+    .step-detail {
+      margin-top: .72rem;
+      padding: .85rem .95rem;
+      overflow-x: auto;
+      border: 1px solid #d5e1e6;
+      border-radius: .9rem;
+      background: #fbfcfd;
+    }
+
+    .one-hot { display: flex; gap: .34rem; min-width: max-content; }
+    .vector-cell { min-width: 3.2rem; padding: .45rem .35rem; border-radius: .45rem; background: #e7eef2; color: #526c7e; font-family: var(--mono); font-size: .76rem; text-align: center; }
+    .vector-cell strong { display: block; margin-bottom: .2rem; color: #688091; font-family: Aptos, "Segoe UI", sans-serif; font-size: .62rem; font-weight: 750; }
+    .vector-cell.active { background: var(--teal); color: white; }
+    .vector-cell.active strong { color: #d8f4f5; }
+
+    .mini-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: .75rem; }
+    .mini-table th, .mini-table td { padding: .46rem .5rem; border-bottom: 1px solid #dee7eb; text-align: right; }
+    .mini-table th:first-child, .mini-table td:first-child { text-align: left; }
+    .mini-table th { color: #687f90; font-family: Aptos, "Segoe UI", sans-serif; font-size: .69rem; }
+    .mini-table tr.highlight { background: var(--teal-soft); color: var(--teal-dark); font-weight: 800; }
+    .mini-table tr.context-row { box-shadow: inset 3px 0 var(--orange); }
+
+    .next-cue { display: flex; align-items: center; gap: .5rem; margin: auto 0 .9rem; padding-top: 1rem; color: #60788a; font-size: .82rem; }
+    .next-cue b { color: var(--teal); }
+    .stage-controls { padding-top: .92rem; border-top: 1px solid #d9e4e9; }
+    .stage-controls button { min-width: 8rem; }
+
+    .visual-section, .history-section { margin-top: 1.1rem; padding: clamp(1.15rem, 2.3vw, 1.65rem); }
+    .visual-heading { align-items: flex-end; margin-bottom: .9rem; }
+    .visual-heading h2, .history-heading h2 { margin: 0; font-size: clamp(1.65rem, 2.6vw, 2.3rem); }
+    .visual-heading > p, .history-heading > p { max-width: 33rem; margin: 0; color: #60788a; font-size: .9rem; text-align: right; }
+
+    .visual-grid { display: grid; grid-template-columns: minmax(22rem, .88fr) minmax(30rem, 1.18fr); gap: .85rem; }
+    .chart-card, .table-card { overflow: hidden; border: 1px solid #d4e0e6; border-radius: .95rem; background: #f8fbfc; }
+    .chart-card { padding: .95rem; }
+    .chart-title { display: flex; align-items: center; justify-content: space-between; gap: .7rem; margin-bottom: .7rem; color: #294d60; font-size: .78rem; font-weight: 800; }
+    .legend { display: flex; gap: .65rem; color: #6a8190; font-size: .68rem; font-weight: 650; }
+    .legend i { display: inline-block; width: .55rem; height: .55rem; margin-right: .25rem; border-radius: 50%; background: var(--teal); }
+    .legend .context-key i { background: var(--orange); }
+
+    .probability-list { display: grid; gap: .44rem; }
+    .probability-row { display: grid; grid-template-columns: minmax(4rem, .7fr) minmax(8rem, 2fr) 3.6rem; align-items: center; gap: .48rem; font-family: var(--mono); font-size: .72rem; }
+    .probability-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .probability-track { height: .68rem; overflow: hidden; border-radius: 999px; background: #e1eaee; }
+    .probability-bar { height: 100%; min-width: 2px; border-radius: inherit; background: #75bec5; transition: width 180ms ease; }
+    .probability-row.correct { color: #a5482d; font-weight: 800; }
+    .probability-row.correct .probability-bar { background: var(--orange); }
+
+    #embedding-chart, #loss-chart { display: block; width: 100%; height: auto; }
+    .plot-grid { stroke: #dce6eb; stroke-width: 1; }
+    .plot-axis { stroke: #9eb2be; stroke-width: 1.2; }
+    .origin-path { stroke: #bdcbd2; stroke-width: 1.2; stroke-dasharray: 3 4; }
+    .word-dot { fill: var(--teal); stroke: white; stroke-width: 2.5; }
+    .word-dot.center-dot { fill: var(--teal-dark); stroke-width: 4; }
+    .word-dot.context-dot { fill: var(--orange); stroke-width: 4; }
+    .word-label { fill: #294d60; font-family: var(--mono); font-size: 12px; font-weight: 700; paint-order: stroke; stroke: #f8fbfc; stroke-width: 4px; stroke-linejoin: round; }
+
+    .metric-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: .62rem; margin-bottom: .85rem; }
+    .metric { padding: .68rem .76rem; border-radius: .7rem; background: white; }
+    .metric span { display: block; color: #657b8d; font-size: .67rem; font-weight: 800; letter-spacing: .035em; text-transform: uppercase; }
+    .metric strong { display: block; margin-top: .23rem; overflow: hidden; color: #123b50; font-family: var(--mono); font-size: 1.08rem; text-overflow: ellipsis; white-space: nowrap; }
+
+    .history-grid { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(29rem, 1fr); gap: .85rem; }
+    .loss-line { fill: none; stroke: var(--teal); stroke-linecap: round; stroke-linejoin: round; stroke-width: 4; }
+    .loss-point { fill: #63c1c8; stroke: white; stroke-width: 2; }
+    .loss-point.latest { fill: var(--orange); stroke-width: 3; }
+    .chart-label { fill: #6d8292; font-family: Aptos, "Segoe UI", sans-serif; font-size: 12px; }
+    .chart-value { fill: #b94d30; font-family: var(--mono); font-size: 12px; font-weight: 700; }
+    .table-scroll { overflow-x: auto; }
+    .history-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: .73rem; }
+    .history-table th, .history-table td { padding: .65rem .58rem; border-bottom: 1px solid #dce6eb; text-align: right; }
+    .history-table th { color: #60788a; font-family: Aptos, "Segoe UI", sans-serif; font-size: .68rem; }
+    .history-table th:first-child, .history-table td:first-child { text-align: left; }
+    .history-table tbody tr:first-child { background: #e8f7f7; }
+
+    footer { padding: 1rem 0 0; color: #718596; font-size: .75rem; line-height: 1.5; text-align: center; }
+    footer a { color: var(--teal-dark); }
+
+    @media (max-width: 1050px) {
+      .workspace-grid, .visual-grid, .history-grid { grid-template-columns: 1fr; }
+      .panel { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+      .panel-heading { grid-column: 1 / -1; }
+      .subpanel { margin-top: 0; }
+    }
+
+    @media (max-width: 700px) {
+      main { padding-top: 1.1rem; }
+      .site-header { display: block; }
+      .header-actions { justify-content: flex-start; margin-top: .9rem; }
+      .idea-strip { grid-template-columns: 1fr; gap: .3rem; }
+      .idea-arrow { transform: rotate(90deg); justify-self: start; }
+      .panel, .equation-stack { grid-template-columns: 1fr; }
+      .panel-heading, .result-block { grid-column: auto; }
+      .stage { min-height: 41rem; }
+      .stage-topline, .visual-heading, .history-heading { align-items: flex-start; flex-direction: column; }
+      .visual-heading > p, .history-heading > p { text-align: left; }
+      .stage-controls button { min-width: 0; }
+      .metric-row { grid-template-columns: 1fr 1fr; }
+      .visual-grid { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    @media (prefers-reduced-motion: reduce) { * { transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">APAI4011 · Word embeddings</p>
+        <h1>Word2Vec: from context to embeddings</h1>
+        <p class="header-copy">Train a two-dimensional Skip-gram model on a tiny corpus. Follow one prediction from a word pair to a gradient update, then watch repeated training reorganize the embedding space.</p>
+      </div>
+      <div class="header-actions">
+        <a class="pill-link" href="../../">← All demos</a>
+        <a class="pill-link" href="https://arxiv.org/abs/1301.3781" target="_blank" rel="noreferrer">▤ Original paper</a>
+      </div>
+    </header>
+
+    <div class="idea-strip" aria-label="Core Word2Vec idea">
+      <span><strong>1 · Observe</strong> nearby words</span><span class="idea-arrow" aria-hidden="true">→</span>
+      <span><strong>2 · Predict</strong> the context</span><span class="idea-arrow" aria-hidden="true">→</span>
+      <span><strong>3 · Learn</strong> useful vectors</span>
+    </div>
+
+    <nav class="step-nav" aria-label="Word2Vec calculation steps">
+      <button class="step-button active" type="button" data-step="0"><span>1</span>Pair</button>
+      <button class="step-button" type="button" data-step="1"><span>2</span>One-hot</button>
+      <button class="step-button" type="button" data-step="2"><span>3</span>Lookup</button>
+      <button class="step-button" type="button" data-step="3"><span>4</span>Scores</button>
+      <button class="step-button" type="button" data-step="4"><span>5</span>Softmax</button>
+      <button class="step-button" type="button" data-step="5"><span>6</span>Loss &amp; gradient</button>
+      <button class="step-button" type="button" data-step="6"><span>7</span>Update</button>
+    </nav>
+    <div class="progress-track" aria-hidden="true"><div class="progress-bar" id="progress-bar"></div></div>
+
+    <div class="workspace-grid">
+      <aside class="panel">
+        <div class="panel-heading">
+          <p class="eyebrow">Tiny training laboratory</p>
+          <span class="chip">Skip-gram · full softmax</span>
+        </div>
+
+        <section class="subpanel">
+          <div class="control-heading">
+            <div>
+              <label for="corpus-input">Editable corpus</label>
+              <p class="support-copy">One sentence per line; use 2–14 unique words.</p>
+            </div>
+          </div>
+          <textarea id="corpus-input" spellcheck="false">cats chase mice
+dogs chase balls
+cats eat fish
+dogs eat meat</textarea>
+          <div class="compact-controls">
+            <div>
+              <label for="window-select">Window size</label>
+              <select id="window-select"><option value="1" selected>1 word</option><option value="2">2 words</option></select>
+            </div>
+            <div>
+              <label for="dimension-display">Dimensions</label>
+              <select id="dimension-display" disabled><option>2 (for plotting)</option></select>
+            </div>
+          </div>
+          <button class="action-button secondary full-button" id="apply-corpus" type="button">Use this corpus</button>
+          <p class="status-message" id="corpus-status" aria-live="polite"></p>
+        </section>
+
+        <section class="subpanel">
+          <div class="pair-heading">
+            <div>
+              <span class="training-title">Selected training pair</span>
+              <p class="support-copy" id="pair-counter">Pair 1 of 16</p>
+            </div>
+            <div class="pair-buttons">
+              <button class="icon-button" id="previous-pair" type="button" aria-label="Previous training pair">‹</button>
+              <button class="icon-button" id="next-pair" type="button" aria-label="Next training pair">›</button>
+            </div>
+          </div>
+          <div class="sentence-view" id="sentence-view"></div>
+          <div class="pair-equation">
+            <span class="word-badge center" id="center-badge"></span>
+            <span class="pair-arrow">predicts →</span>
+            <span class="word-badge context" id="context-badge"></span>
+          </div>
+        </section>
+
+        <section class="subpanel">
+          <div class="control-heading">
+            <div>
+              <label for="eta-slider">Learning rate η</label>
+              <p class="support-copy">Controls the size of each update.</p>
+            </div>
+            <output class="eta-value" id="eta-output" for="eta-slider">0.10</output>
+          </div>
+          <input id="eta-slider" type="range" min="0.01" max="0.30" step="0.01" value="0.10">
+          <div class="slider-scale" aria-hidden="true"><span>0.01</span><span>0.10</span><span>0.30</span></div>
+        </section>
+
+        <section class="subpanel">
+          <div class="training-heading">
+            <div>
+              <span class="training-title">Train the model</span>
+              <p class="support-copy">An epoch visits every generated pair once.</p>
+            </div>
+            <strong class="counter-chip" id="update-counter">0 updates</strong>
+          </div>
+          <div class="training-buttons">
+            <button class="action-button" id="run-pair" type="button">▶ Update this pair</button>
+            <button class="action-button secondary" id="run-epoch" type="button">Run 1 epoch</button>
+            <button class="action-button secondary wide" id="run-twenty" type="button">≫ Run 20 epochs</button>
+          </div>
+          <button class="text-button" id="reset-model" type="button">↻ Reset vectors, keep corpus</button>
+        </section>
+      </aside>
+
+      <section class="stage" aria-live="polite">
+        <div class="stage-topline"><span id="step-count">Step 1 of 7</span><span id="stage-eyebrow">Create supervision from proximity</span></div>
+        <h2 id="stage-title">Turn nearby words into a training pair</h2>
+
+        <div class="equation-stack">
+          <div class="equation-block">
+            <span class="block-label">General form</span>
+            <code id="stage-formula"></code>
+          </div>
+          <div class="equation-block substitution">
+            <span class="block-label">Current values</span>
+            <code id="stage-substitution"></code>
+          </div>
+          <div class="result-block">
+            <span class="block-label">Result</span>
+            <strong id="stage-result"></strong>
+          </div>
+        </div>
+
+        <div class="meaning-card">
+          <span class="block-label">What this means</span>
+          <p id="stage-explanation"></p>
+        </div>
+
+        <div class="step-detail" id="step-detail"></div>
+
+        <div class="teaching-note" id="teaching-note">
+          <span class="block-label">Keep the two matrices distinct</span>
+          <p id="teaching-note-copy"></p>
+        </div>
+
+        <div class="next-cue"><b aria-hidden="true">→</b><span id="stage-cue"></span></div>
+
+        <div class="stage-controls">
+          <button class="action-button secondary" id="previous-step" type="button">‹ Previous</button>
+          <button class="action-button" id="next-step" type="button">Next step ›</button>
+        </div>
+      </section>
+    </div>
+
+    <section class="visual-section" aria-labelledby="visual-title">
+      <div class="visual-heading">
+        <div><p class="eyebrow">Model state</p><h2 id="visual-title">Prediction and embedding space</h2></div>
+        <p>The probability bars use the output matrix. The scatter plot shows the learned input embeddings.</p>
+      </div>
+      <div class="visual-grid">
+        <div class="chart-card">
+          <div class="chart-title"><span id="probability-title">P(context | center)</span><span class="legend"><span class="context-key"><i></i>true context</span></span></div>
+          <div class="probability-list" id="probability-list"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">
+            <span>Input embedding matrix W<sub>in</sub></span>
+            <span class="legend"><span><i></i>center</span><span class="context-key"><i></i>context word</span></span>
+          </div>
+          <svg id="embedding-chart" viewBox="0 0 620 360" role="img" aria-label="Two-dimensional word embedding space"></svg>
+        </div>
+      </div>
+    </section>
+
+    <section class="history-section" aria-labelledby="history-title">
+      <div class="history-heading">
+        <div><p class="eyebrow">Repeated training</p><h2 id="history-title">Learning history</h2></div>
+        <p>Average loss is evaluated over every pair in the current corpus.</p>
+      </div>
+      <div class="metric-row">
+        <div class="metric"><span>Average loss</span><strong id="average-loss">—</strong></div>
+        <div class="metric"><span>Current pair loss</span><strong id="pair-loss">—</strong></div>
+        <div class="metric"><span>True-context probability</span><strong id="context-probability">—</strong></div>
+        <div class="metric"><span>Nearest to center</span><strong id="nearest-word">—</strong></div>
+      </div>
+      <div class="history-grid">
+        <div class="chart-card"><svg id="loss-chart" viewBox="0 0 640 210" role="img" aria-label="Average loss during Word2Vec training"></svg></div>
+        <div class="table-card table-scroll">
+          <table class="history-table">
+            <thead><tr><th>Checkpoint</th><th>Updates</th><th>Average loss</th><th>Pair loss</th><th>P(context)</th></tr></thead>
+            <tbody id="history-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>This small-vocabulary teaching model uses full softmax so every calculation remains visible. Production Word2Vec commonly replaces this expensive normalization with hierarchical softmax or negative sampling. Sources: <a href="https://arxiv.org/abs/1301.3781" target="_blank" rel="noreferrer">Mikolov et al. (2013)</a> and <a href="https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality" target="_blank" rel="noreferrer">Mikolov et al. (2013, negative sampling)</a>.</p>
+    </footer>
+  </main>
+
+  <script>
+    "use strict";
+
+    const DEFAULT_CORPUS = `cats chase mice
+dogs chase balls
+cats eat fish
+dogs eat meat`;
+
+    const state = {
+      step: 0,
+      eta: 0.1,
+      windowSize: 1,
+      sentences: [],
+      vocabulary: [],
+      wordToIndex: new Map(),
+      pairs: [],
+      pairIndex: 0,
+      wIn: [],
+      wOut: [],
+      initialWIn: [],
+      updates: 0,
+      epochs: 0,
+      history: []
+    };
+
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => [...document.querySelectorAll(selector)];
+    const escapeHtml = (value) => String(value).replace(/[&<>"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" }[character]));
+    const cloneMatrix = (matrix) => matrix.map((row) => [...row]);
+    const dot = (a, b) => a.reduce((sum, value, index) => sum + value * b[index], 0);
+    const format = (value, digits = 4) => Number(value).toFixed(digits);
+    const vectorText = (vector, digits = 3) => `[${vector.map((value) => format(value, digits)).join(", ")}]`;
+
+    function tokenizeCorpus(text) {
+      return text.split(/\n+/).map((line) => (line.toLowerCase().match(/[\p{L}\p{N}']+/gu) || [])).filter((tokens) => tokens.length >= 2);
+    }
+
+    function buildPairs(sentences, windowSize) {
+      const pairs = [];
+      sentences.forEach((sentence, sentenceIndex) => {
+        sentence.forEach((center, centerIndex) => {
+          const start = Math.max(0, centerIndex - windowSize);
+          const end = Math.min(sentence.length - 1, centerIndex + windowSize);
+          for (let contextIndex = start; contextIndex <= end; contextIndex += 1) {
+            if (contextIndex !== centerIndex) {
+              pairs.push({ center, context: sentence[contextIndex], sentenceIndex, centerIndex, contextIndex });
+            }
+          }
+        });
+      });
+      return pairs;
+    }
+
+    function seededRandom(seedText) {
+      let seed = 2166136261;
+      for (const character of seedText) {
+        seed ^= character.codePointAt(0);
+        seed = Math.imul(seed, 16777619);
+      }
+      return () => {
+        seed += 0x6D2B79F5;
+        let value = seed;
+        value = Math.imul(value ^ (value >>> 15), value | 1);
+        value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+        return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function initializeMatrices() {
+      const random = seededRandom(state.sentences.map((sentence) => sentence.join(" ")).join("|") + `:${state.windowSize}`);
+      const makeMatrix = () => state.vocabulary.map(() => [random() * .5 - .25, random() * .5 - .25]);
+      state.wIn = makeMatrix();
+      state.wOut = makeMatrix();
+      state.initialWIn = cloneMatrix(state.wIn);
+      state.updates = 0;
+      state.epochs = 0;
+      state.step = 0;
+      state.history = [];
+      recordHistory("Initial");
+    }
+
+    function configureCorpus(showMessage = true) {
+      const sentences = tokenizeCorpus($("#corpus-input").value);
+      const vocabulary = [...new Set(sentences.flat())];
+      const status = $("#corpus-status");
+
+      if (!sentences.length) {
+        status.textContent = "Enter at least one sentence containing two words.";
+        status.className = "status-message error";
+        return false;
+      }
+      if (vocabulary.length < 2 || vocabulary.length > 14) {
+        status.textContent = `This demo needs 2–14 unique words; the current corpus has ${vocabulary.length}.`;
+        status.className = "status-message error";
+        return false;
+      }
+
+      state.sentences = sentences;
+      state.vocabulary = vocabulary;
+      state.wordToIndex = new Map(vocabulary.map((word, index) => [word, index]));
+      state.windowSize = Number($("#window-select").value);
+      state.pairs = buildPairs(sentences, state.windowSize);
+      state.pairIndex = 0;
+      initializeMatrices();
+      status.textContent = showMessage ? `${vocabulary.length} words · ${state.pairs.length} training pairs · vectors reset` : "";
+      status.className = "status-message";
+      render();
+      return true;
+    }
+
+    function currentPair() { return state.pairs[state.pairIndex]; }
+
+    function forward(pair = currentPair()) {
+      const centerIndex = state.wordToIndex.get(pair.center);
+      const contextIndex = state.wordToIndex.get(pair.context);
+      const centerVector = state.wIn[centerIndex];
+      const scores = state.wOut.map((outputVector) => dot(outputVector, centerVector));
+      const maximum = Math.max(...scores);
+      const exponentials = scores.map((score) => Math.exp(score - maximum));
+      const denominator = exponentials.reduce((sum, value) => sum + value, 0);
+      const probabilities = exponentials.map((value) => value / denominator);
+      const loss = -Math.log(Math.max(probabilities[contextIndex], Number.EPSILON));
+      const delta = probabilities.map((probability, index) => probability - (index === contextIndex ? 1 : 0));
+      const gradientCenter = [0, 1].map((dimension) => delta.reduce((sum, value, index) => sum + value * state.wOut[index][dimension], 0));
+      const gradientOutput = state.wOut.map((_, index) => centerVector.map((value) => delta[index] * value));
+      return { centerIndex, contextIndex, centerVector: [...centerVector], scores, probabilities, loss, delta, gradientCenter, gradientOutput };
+    }
+
+    function previewUpdate(metrics = forward()) {
+      return {
+        center: state.wIn[metrics.centerIndex].map((value, dimension) => value - state.eta * metrics.gradientCenter[dimension]),
+        contextOutput: state.wOut[metrics.contextIndex].map((value, dimension) => value - state.eta * metrics.gradientOutput[metrics.contextIndex][dimension])
+      };
+    }
+
+    function updatePair(pair) {
+      const metrics = forward(pair);
+      const oldCenter = [...state.wIn[metrics.centerIndex]];
+      const oldOutput = cloneMatrix(state.wOut);
+      state.wIn[metrics.centerIndex] = oldCenter.map((value, dimension) => value - state.eta * metrics.gradientCenter[dimension]);
+      state.wOut = oldOutput.map((row, index) => row.map((value, dimension) => value - state.eta * metrics.gradientOutput[index][dimension]));
+      state.updates += 1;
+    }
+
+    function averageLoss() {
+      return state.pairs.reduce((sum, pair) => sum + forward(pair).loss, 0) / state.pairs.length;
+    }
+
+    function recordHistory(label) {
+      const metrics = forward();
+      state.history.push({ label, updates: state.updates, averageLoss: averageLoss(), pairLoss: metrics.loss, probability: metrics.probabilities[metrics.contextIndex] });
+      state.history = state.history.slice(-81);
+    }
+
+    function trainCurrentPair() {
+      updatePair(currentPair());
+      recordHistory("Pair");
+      state.step = 6;
+      render();
+    }
+
+    function trainEpochs(count) {
+      for (let epoch = 0; epoch < count; epoch += 1) {
+        state.pairs.forEach((pair) => updatePair(pair));
+        state.epochs += 1;
+        recordHistory(`Epoch ${state.epochs}`);
+      }
+      state.step = 6;
+      render();
+    }
+
+    function resetModel() {
+      initializeMatrices();
+      render();
+    }
+
+    function movePair(offset) {
+      state.pairIndex = (state.pairIndex + offset + state.pairs.length) % state.pairs.length;
+      state.step = 0;
+      state.history = [];
+      recordHistory(state.updates ? "Selected pair" : "Initial");
+      render();
+    }
+
+    function cosine(a, b) {
+      const denominator = Math.sqrt(dot(a, a)) * Math.sqrt(dot(b, b));
+      return denominator ? dot(a, b) / denominator : 0;
+    }
+
+    function nearestNeighbor() {
+      const pair = currentPair();
+      const centerIndex = state.wordToIndex.get(pair.center);
+      let best = null;
+      state.vocabulary.forEach((word, index) => {
+        if (index === centerIndex) return;
+        const similarity = cosine(state.wIn[centerIndex], state.wIn[index]);
+        if (!best || similarity > best.similarity) best = { word, similarity };
+      });
+      return best;
+    }
+
+    function detailForStep(step, metrics) {
+      const pair = currentPair();
+      if (step === 0) {
+        return `<div class="pair-equation"><span class="word-badge center">${escapeHtml(pair.center)}</span><span class="pair-arrow">predicts →</span><span class="word-badge context">${escapeHtml(pair.context)}</span></div>`;
+      }
+      if (step === 1) {
+        return `<div class="one-hot">${state.vocabulary.map((word, index) => `<span class="vector-cell${index === metrics.centerIndex ? " active" : ""}"><strong>${escapeHtml(word)}</strong>${index === metrics.centerIndex ? 1 : 0}</span>`).join("")}</div>`;
+      }
+      if (step === 2) {
+        return `<table class="mini-table"><thead><tr><th>W<sub>in</sub> row</th><th>dimension 1</th><th>dimension 2</th></tr></thead><tbody>${state.vocabulary.map((word, index) => `<tr class="${index === metrics.centerIndex ? "highlight" : ""}"><td>${escapeHtml(word)}</td><td>${format(state.wIn[index][0], 3)}</td><td>${format(state.wIn[index][1], 3)}</td></tr>`).join("")}</tbody></table>`;
+      }
+      if (step === 3) {
+        return `<table class="mini-table"><thead><tr><th>candidate context</th><th>u<sub>w</sub></th><th>u<sub>w</sub> · v<sub>${escapeHtml(pair.center)}</sub></th></tr></thead><tbody>${state.vocabulary.map((word, index) => `<tr class="${index === metrics.contextIndex ? "context-row" : ""}"><td>${escapeHtml(word)}</td><td>${escapeHtml(vectorText(state.wOut[index], 3))}</td><td>${format(metrics.scores[index], 4)}</td></tr>`).join("")}</tbody></table>`;
+      }
+      if (step === 4) {
+        return `<div class="probability-list">${probabilityRows(metrics)}</div>`;
+      }
+      if (step === 5) {
+        return `<table class="mini-table"><thead><tr><th>quantity</th><th>value</th></tr></thead><tbody><tr><td>δ = p − y</td><td>${escapeHtml(vectorText(metrics.delta, 3))}</td></tr><tr class="highlight"><td>∂L/∂v<sub>${escapeHtml(pair.center)}</sub></td><td>${escapeHtml(vectorText(metrics.gradientCenter, 4))}</td></tr><tr class="context-row"><td>∂L/∂u<sub>${escapeHtml(pair.context)}</sub></td><td>${escapeHtml(vectorText(metrics.gradientOutput[metrics.contextIndex], 4))}</td></tr></tbody></table>`;
+      }
+      const preview = previewUpdate(metrics);
+      return `<table class="mini-table"><thead><tr><th>vector</th><th>before</th><th>after one update</th></tr></thead><tbody><tr class="highlight"><td>v<sub>${escapeHtml(pair.center)}</sub></td><td>${escapeHtml(vectorText(metrics.centerVector, 4))}</td><td>${escapeHtml(vectorText(preview.center, 4))}</td></tr><tr class="context-row"><td>u<sub>${escapeHtml(pair.context)}</sub></td><td>${escapeHtml(vectorText(state.wOut[metrics.contextIndex], 4))}</td><td>${escapeHtml(vectorText(preview.contextOutput, 4))}</td></tr></tbody></table>`;
+    }
+
+    function describeSteps(metrics) {
+      const pair = currentPair();
+      const preview = previewUpdate(metrics);
+      const vocabularySize = state.vocabulary.length;
+      return [
+        {
+          eyebrow: "Create supervision from proximity",
+          title: "Turn nearby words into a training pair",
+          formula: "(center word, context word)",
+          substitution: `window = ${state.windowSize}; center = “${pair.center}”`,
+          result: `(${pair.center} → ${pair.context})`,
+          explanation: "Skip-gram treats a nearby word as the prediction target. Moving the window through the corpus creates many supervised pairs without manual labels.",
+          cue: "Represent the center word as a vocabulary-sized one-hot vector.",
+          note: "Proximity supplies the training signal; it does not guarantee that every nearby word has the same semantic relation."
+        },
+        {
+          eyebrow: "Encode identity, not meaning",
+          title: "Represent the center word as one-hot",
+          formula: `x ∈ {0,1}^${vocabularySize}; Σxᵢ = 1`,
+          substitution: `index(“${pair.center}”) = ${metrics.centerIndex}`,
+          result: `x_${pair.center} = [${state.vocabulary.map((_, index) => index === metrics.centerIndex ? 1 : 0).join(", ")}]`,
+          explanation: "The one-hot vector only identifies a vocabulary item. It contains no graded similarity: every pair of distinct one-hot vectors is equally different.",
+          cue: "Multiplying by the input matrix selects one row: the center embedding.",
+          note: "The useful representation is not the one-hot vector. It is the dense row learned inside W_in."
+        },
+        {
+          eyebrow: "Embedding lookup",
+          title: "Select the center word’s dense vector",
+          formula: "v_center = W_inᵀx",
+          substitution: `v_${pair.center} = W_in[“${pair.center}”]`,
+          result: `v_${pair.center} = ${vectorText(metrics.centerVector)}`,
+          explanation: "Because x has one non-zero entry, matrix multiplication simply retrieves one row. Training will change this row so it becomes useful for predicting contexts.",
+          cue: "Compare this center vector with every row of the output matrix.",
+          note: "Word2Vec learns two matrices: W_in supplies center vectors v; W_out supplies candidate-context vectors u. The scatter plot below displays W_in."
+        },
+        {
+          eyebrow: "Linear prediction",
+          title: "Score every possible context word",
+          formula: "s_w = u_wᵀv_center",
+          substitution: `s_${pair.context} = ${vectorText(state.wOut[metrics.contextIndex])} · ${vectorText(metrics.centerVector)}`,
+          result: `s_${pair.context} = ${format(metrics.scores[metrics.contextIndex])}`,
+          explanation: "A larger dot product means the current model considers that candidate more compatible with the center word. Scores are not probabilities yet.",
+          cue: "Normalize all vocabulary scores with softmax.",
+          note: "The score uses v from W_in and u from W_out—not two rows from the same matrix."
+        },
+        {
+          eyebrow: "Normalize competing candidates",
+          title: "Convert scores into context probabilities",
+          formula: "P(w|center) = exp(s_w) / Σ_j exp(s_j)",
+          substitution: `P(${pair.context}|${pair.center}) = exp(${format(metrics.scores[metrics.contextIndex], 3)}) / Σ_j exp(s_j)`,
+          result: `P(${pair.context}|${pair.center}) = ${format(metrics.probabilities[metrics.contextIndex])}`,
+          explanation: `All ${vocabularySize} candidates compete for probability mass. Their probabilities sum to one; the orange bar marks the observed context.`,
+          cue: "Use the observed context to measure prediction error.",
+          note: "Full softmax is transparent for this tiny vocabulary, but its denominator becomes expensive when the vocabulary is large."
+        },
+        {
+          eyebrow: "Learning signal",
+          title: "Compute loss and backpropagate the error",
+          formula: "L = −log P(context|center); ∂L/∂s = p − y",
+          substitution: `L = −log(${format(metrics.probabilities[metrics.contextIndex])})`,
+          result: `L = ${format(metrics.loss)}; ∇v_${pair.center} = ${vectorText(metrics.gradientCenter)}`,
+          explanation: "The target candidate receives p−1; every other candidate receives p. These score gradients flow into both the selected input vector and all output vectors.",
+          cue: "Move the affected vectors opposite their gradients.",
+          note: "A single pair changes one row of W_in, but every row of W_out under full softmax. Negative sampling updates only a small set of output rows."
+        },
+        {
+          eyebrow: `Gradient descent · η = ${state.eta.toFixed(2)}`,
+          title: "Update the vectors, then learn from more pairs",
+          formula: "parameter_new = parameter_old − η × gradient",
+          substitution: `v_${pair.center}′ = ${vectorText(metrics.centerVector)} − ${state.eta.toFixed(2)} × ${vectorText(metrics.gradientCenter)}`,
+          result: `v_${pair.center}′ = ${vectorText(preview.center)}`,
+          explanation: "One update only improves one local prediction. Repeating the process across the corpus makes words with similar context-prediction demands develop similar input vectors.",
+          cue: "Apply this update, run an epoch, or compare the embedding space after 20 epochs.",
+          note: "Similarity is an emergent consequence of the prediction objective; no coordinate is assigned a human-readable meaning in advance."
+        }
+      ];
+    }
+
+    function probabilityRows(metrics) {
+      const maximum = Math.max(...metrics.probabilities);
+      return state.vocabulary.map((word, index) => {
+        const width = maximum ? Math.max(1, metrics.probabilities[index] / maximum * 100) : 1;
+        return `<div class="probability-row${index === metrics.contextIndex ? " correct" : ""}"><span class="probability-name">${escapeHtml(word)}</span><span class="probability-track"><span class="probability-bar" style="width:${width}%"></span></span><span>${format(metrics.probabilities[index], 3)}</span></div>`;
+      }).join("");
+    }
+
+    function renderPair() {
+      const pair = currentPair();
+      const sentence = state.sentences[pair.sentenceIndex];
+      $("#pair-counter").textContent = `Pair ${state.pairIndex + 1} of ${state.pairs.length}`;
+      $("#center-badge").textContent = pair.center;
+      $("#context-badge").textContent = pair.context;
+      $("#sentence-view").innerHTML = sentence.map((word, index) => {
+        const className = index === pair.centerIndex ? " center" : index === pair.contextIndex ? " context" : "";
+        return `<span class="token${className}">${escapeHtml(word)}</span>`;
+      }).join("");
+    }
+
+    function renderStage(metrics) {
+      const steps = describeSteps(metrics);
+      const active = steps[state.step];
+      $$(".step-button").forEach((button, index) => {
+        button.classList.toggle("active", index === state.step);
+        button.classList.toggle("done", index < state.step);
+        button.setAttribute("aria-current", index === state.step ? "step" : "false");
+      });
+      $("#progress-bar").style.width = `${(state.step + 1) / steps.length * 100}%`;
+      $("#step-count").textContent = `Step ${state.step + 1} of ${steps.length}`;
+      $("#stage-eyebrow").textContent = active.eyebrow;
+      $("#stage-title").textContent = active.title;
+      $("#stage-formula").textContent = active.formula;
+      $("#stage-substitution").textContent = active.substitution;
+      $("#stage-result").textContent = active.result;
+      $("#stage-explanation").textContent = active.explanation;
+      $("#stage-cue").textContent = active.cue;
+      $("#teaching-note-copy").textContent = active.note;
+      $("#step-detail").innerHTML = detailForStep(state.step, metrics);
+      $("#previous-step").disabled = state.step === 0;
+      $("#next-step").textContent = state.step === steps.length - 1 ? "Apply this update ▶" : "Next step ›";
+    }
+
+    function renderProbabilities(metrics) {
+      const pair = currentPair();
+      $("#probability-title").textContent = `P(context | ${pair.center})`;
+      $("#probability-list").innerHTML = probabilityRows(metrics);
+    }
+
+    function renderEmbeddingChart() {
+      const width = 620;
+      const height = 360;
+      const padding = 42;
+      const maximum = Math.max(.35, ...state.wIn.flat().map((value) => Math.abs(value)), ...state.initialWIn.flat().map((value) => Math.abs(value))) * 1.22;
+      const scaleX = (value) => padding + ((value + maximum) / (maximum * 2)) * (width - padding * 2);
+      const scaleY = (value) => height - padding - ((value + maximum) / (maximum * 2)) * (height - padding * 2);
+      const pair = currentPair();
+      const centerIndex = state.wordToIndex.get(pair.center);
+      const contextIndex = state.wordToIndex.get(pair.context);
+      const grid = [-.5, 0, .5].map((fraction) => {
+        const x = padding + (fraction + .5) * (width - padding * 2);
+        const y = padding + (fraction + .5) * (height - padding * 2);
+        return `<line x1="${x}" x2="${x}" y1="${padding}" y2="${height - padding}" class="plot-grid"></line><line x1="${padding}" x2="${width - padding}" y1="${y}" y2="${y}" class="plot-grid"></line>`;
+      }).join("");
+      const paths = state.wIn.map((vector, index) => `<line x1="${scaleX(state.initialWIn[index][0])}" y1="${scaleY(state.initialWIn[index][1])}" x2="${scaleX(vector[0])}" y2="${scaleY(vector[1])}" class="origin-path"></line>`).join("");
+      const points = state.wIn.map((vector, index) => {
+        const dotClass = index === centerIndex ? " center-dot" : index === contextIndex ? " context-dot" : "";
+        const x = scaleX(vector[0]);
+        const y = scaleY(vector[1]);
+        const anchor = x > width - 105 ? "end" : "start";
+        const labelX = x > width - 105 ? x - 9 : x + 9;
+        return `<circle cx="${x}" cy="${y}" r="6" class="word-dot${dotClass}"></circle><text x="${labelX}" y="${y - 8}" text-anchor="${anchor}" class="word-label">${escapeHtml(state.vocabulary[index])}</text>`;
+      }).join("");
+      $("#embedding-chart").innerHTML = `${grid}<line x1="${padding}" x2="${width - padding}" y1="${scaleY(0)}" y2="${scaleY(0)}" class="plot-axis"></line><line x1="${scaleX(0)}" x2="${scaleX(0)}" y1="${padding}" y2="${height - padding}" class="plot-axis"></line>${paths}${points}<text x="${width - padding}" y="${height - 12}" text-anchor="end" class="chart-label">dimension 1</text><text x="${padding}" y="18" class="chart-label">dimension 2</text>`;
+      $("#embedding-chart").setAttribute("aria-label", `Input embedding space after ${state.updates} updates`);
+    }
+
+    function renderLossChart() {
+      const width = 640;
+      const height = 210;
+      const padding = 32;
+      const maximum = Math.max(.01, ...state.history.map((point) => point.averageLoss));
+      const coordinates = state.history.map((point, index) => ({
+        x: padding + (state.history.length === 1 ? 0 : index / (state.history.length - 1)) * (width - padding * 2),
+        y: height - padding - (point.averageLoss / maximum) * (height - padding * 2)
+      }));
+      const linePoints = coordinates.map((point) => `${point.x},${point.y}`).join(" ");
+      const latest = coordinates[coordinates.length - 1];
+      const guides = [.25, .5, .75].map((fraction) => `<line x1="${padding}" x2="${width - padding}" y1="${padding + fraction * (height - padding * 2)}" y2="${padding + fraction * (height - padding * 2)}" class="plot-grid"></line>`).join("");
+      const circles = coordinates.map((point, index) => `<circle cx="${point.x}" cy="${point.y}" r="${index === coordinates.length - 1 ? 5 : 2.5}" class="loss-point${index === coordinates.length - 1 ? " latest" : ""}"></circle>`).join("");
+      const lastRecord = state.history[state.history.length - 1];
+      $("#loss-chart").innerHTML = `${guides}<line x1="${padding}" x2="${width - padding}" y1="${height - padding}" y2="${height - padding}" class="plot-axis"></line>${coordinates.length > 1 ? `<polyline points="${linePoints}" class="loss-line"></polyline>` : ""}${circles}<text x="${padding}" y="${height - 8}" class="chart-label">start</text><text x="${width - padding}" y="${height - 8}" text-anchor="end" class="chart-label">${state.updates} updates</text><text x="${Math.min(width - 62, latest.x + 9)}" y="${Math.max(17, latest.y - 10)}" class="chart-value">${format(lastRecord.averageLoss, 3)}</text>`;
+    }
+
+    function renderHistory(metrics) {
+      const latest = state.history[state.history.length - 1];
+      const nearest = nearestNeighbor();
+      $("#average-loss").textContent = format(averageLoss());
+      $("#pair-loss").textContent = format(metrics.loss);
+      $("#context-probability").textContent = format(metrics.probabilities[metrics.contextIndex]);
+      $("#nearest-word").textContent = `${nearest.word} (${format(nearest.similarity, 2)})`;
+      $("#history-body").innerHTML = state.history.slice(-8).reverse().map((point) => `<tr><td>${escapeHtml(point.label)}</td><td>${point.updates}</td><td>${format(point.averageLoss)}</td><td>${format(point.pairLoss)}</td><td>${format(point.probability)}</td></tr>`).join("");
+      $("#loss-chart").setAttribute("aria-label", `Average loss at ${state.history.length} checkpoints, ending at ${format(latest.averageLoss)}`);
+      renderLossChart();
+    }
+
+    function render() {
+      const metrics = forward();
+      $("#eta-output").textContent = state.eta.toFixed(2);
+      $("#update-counter").textContent = `${state.updates} update${state.updates === 1 ? "" : "s"}`;
+      renderPair();
+      renderStage(metrics);
+      renderProbabilities(metrics);
+      renderEmbeddingChart();
+      renderHistory(metrics);
+    }
+
+    $$(".step-button").forEach((button) => button.addEventListener("click", () => { state.step = Number(button.dataset.step); render(); }));
+    $("#previous-step").addEventListener("click", () => { state.step = Math.max(0, state.step - 1); render(); });
+    $("#next-step").addEventListener("click", () => { if (state.step === 6) trainCurrentPair(); else { state.step += 1; render(); } });
+    $("#previous-pair").addEventListener("click", () => movePair(-1));
+    $("#next-pair").addEventListener("click", () => movePair(1));
+    $("#eta-slider").addEventListener("input", (event) => { state.eta = Number(event.currentTarget.value); render(); });
+    $("#apply-corpus").addEventListener("click", () => configureCorpus(true));
+    $("#window-select").addEventListener("change", () => configureCorpus(true));
+    $("#run-pair").addEventListener("click", trainCurrentPair);
+    $("#run-epoch").addEventListener("click", () => trainEpochs(1));
+    $("#run-twenty").addEventListener("click", () => trainEpochs(20));
+    $("#reset-model").addEventListener("click", resetModel);
+
+    $("#corpus-input").value = DEFAULT_CORPUS;
+    configureCorpus(false);
+  </script>
+</body>
+</html>

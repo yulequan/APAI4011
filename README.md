@@ -6,6 +6,7 @@ Small, self-contained teaching demos for APAI4011 Natural Language Processing.
 
 - [Demo collection](https://yulequan.github.io/APAI4011/)
 - [Gradient Descent, Step by Step](https://yulequan.github.io/APAI4011/demos/logistic-gradient-descent/)
+- [Word2Vec: From Context to Embeddings](https://yulequan.github.io/APAI4011/demos/word2vec-context-prediction/)
 
 ## Structure
 
@@ -13,6 +14,8 @@ Small, self-contained teaching demos for APAI4011 Natural Language Processing.
 index.html
 demos/
   logistic-gradient-descent/
+    index.html
+  word2vec-context-prediction/
     index.html
 ```
 
