@@ -1,21 +1,19 @@
 # APAI4011 Interactive Demos
 
-Interactive teaching demos for APAI4011 Natural Language Processing.
+Small, self-contained teaching demos for APAI4011 Natural Language Processing.
 
-## Demos
+## Pages
 
 - [Demo collection](https://yulequan.github.io/APAI4011/)
 - [Gradient Descent, Step by Step](https://yulequan.github.io/APAI4011/demos/logistic-gradient-descent/)
 
-## Local development
+## Structure
 
-```bash
-pnpm install
-pnpm dev
+```text
+index.html
+demos/
+  logistic-gradient-descent/
+    index.html
 ```
 
-Open `http://localhost:3000` for the demo collection.
-
-## GitHub Pages
-
-Every update to `main` automatically builds and deploys the static site through GitHub Actions.
+Each page contains its own HTML, CSS, and vanilla JavaScript. No package installation or build step is required.

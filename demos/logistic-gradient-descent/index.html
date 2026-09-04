@@ -1,0 +1,1137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An interactive, step-by-step gradient descent example for logistic regression.">
+  <title>Gradient Descent, Step by Step · APAI4011</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #102a43;
+      --muted: #5b7083;
+      --teal: #0b7285;
+      --teal-dark: #075f6f;
+      --line: #c7d7df;
+      --page: #f3f7f9;
+      --card: rgba(255, 255, 255, .9);
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --serif: Georgia, "Times New Roman", serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { background: var(--page); }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 7% 5%, rgba(34, 166, 179, .1), transparent 26rem),
+        linear-gradient(180deg, #f9fbfc 0%, var(--page) 78%);
+      color: var(--ink);
+      font-family: Aptos, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+    }
+
+    button, input { font: inherit; }
+
+    main {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+      padding: 2rem clamp(1rem, 4vw, 4.5rem) 1.4rem;
+    }
+
+    h1, h2 {
+      font-family: var(--serif);
+      letter-spacing: -.025em;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.25rem, 4vw, 4.1rem);
+      line-height: 1;
+    }
+
+    .eyebrow {
+      margin: 0 0 .45rem;
+      color: var(--teal);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    .site-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 2rem;
+      margin-bottom: 1.7rem;
+    }
+
+    .header-copy {
+      margin: .7rem 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .header-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: .65rem;
+      flex-wrap: wrap;
+    }
+
+    .pill-link {
+      display: inline-flex;
+      align-items: center;
+      gap: .55rem;
+      min-height: 2.75rem;
+      padding: .7rem 1rem;
+      border: 1px solid #b8cbd5;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .76);
+      color: #24485d;
+      font-size: .9rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: 160ms ease;
+    }
+
+    .pill-link:hover, .pill-link:focus-visible {
+      border-color: var(--teal);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .step-nav {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(6rem, 1fr));
+      gap: .55rem;
+      overflow-x: auto;
+      padding-bottom: .55rem;
+    }
+
+    .step-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .52rem;
+      min-height: 2.7rem;
+      border: 1px solid #cbd9e1;
+      border-radius: .75rem;
+      background: rgba(255, 255, 255, .74);
+      color: #647a8c;
+      cursor: pointer;
+      font-size: .84rem;
+      font-weight: 700;
+      white-space: nowrap;
+      transition: 150ms ease;
+    }
+
+    .step-button span {
+      display: grid;
+      width: 1.45rem;
+      height: 1.45rem;
+      place-items: center;
+      border-radius: 50%;
+      background: #e7eef2;
+      color: #486173;
+      font-size: .73rem;
+    }
+
+    .step-button:hover, .step-button:focus-visible {
+      border-color: #22a6b3;
+      outline: none;
+    }
+
+    .step-button.active {
+      border-color: var(--teal);
+      background: var(--teal);
+      color: white;
+      box-shadow: 0 8px 24px rgba(11, 114, 133, .18);
+    }
+
+    .step-button.active span {
+      background: #c8eef0;
+      color: #075a69;
+    }
+
+    .step-button.done {
+      border-color: #a8d6d9;
+      background: #e8f7f7;
+      color: #146c78;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: .28rem;
+      margin: .05rem 0 1.25rem;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #dce8ed;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #22a6b3, var(--teal));
+      transition: width 180ms ease;
+    }
+
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: minmax(21rem, .82fr) minmax(34rem, 1.65fr);
+      gap: 1.2rem;
+      align-items: stretch;
+    }
+
+    .panel, .stage, .history-section {
+      border: 1px solid var(--line);
+      border-radius: 1.25rem;
+      background: var(--card);
+      box-shadow: 0 18px 52px rgba(30, 64, 85, .08);
+    }
+
+    .panel { padding: 1.25rem; }
+
+    .panel-heading, .eta-heading, .parameter-heading, .stage-topline, .stage-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .chip {
+      padding: .4rem .7rem;
+      border-radius: 999px;
+      background: #dff4e9;
+      color: #197046;
+      font-size: .78rem;
+      font-weight: 800;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .7rem;
+      margin-top: .8rem;
+    }
+
+    .feature-card {
+      position: relative;
+      min-height: 8rem;
+      padding: 1rem;
+      overflow: hidden;
+      border-radius: 1rem;
+    }
+
+    .feature-card::after {
+      position: absolute;
+      right: -1.1rem;
+      bottom: -2rem;
+      width: 5.5rem;
+      height: 5.5rem;
+      border-radius: 50%;
+      content: "";
+      opacity: .18;
+    }
+
+    .feature-card.positive { background: #e5f6ee; color: #175a3d; }
+    .feature-card.positive::after { background: #2a9d68; }
+    .feature-card.negative { background: #fff0ea; color: #98432f; }
+    .feature-card.negative::after { background: #e76f51; }
+
+    .feature-card label {
+      position: relative;
+      z-index: 1;
+      display: block;
+      font-family: var(--serif);
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .feature-input {
+      position: relative;
+      z-index: 1;
+      width: 5.4rem;
+      height: 3rem;
+      margin: .35rem 0 .25rem;
+      padding: .25rem .5rem;
+      border: 1px solid rgba(16, 42, 67, .22);
+      border-radius: .55rem;
+      background: rgba(255, 255, 255, .72);
+      color: currentColor;
+      font-family: var(--serif);
+      font-size: 1.75rem;
+      font-weight: 700;
+    }
+
+    .feature-card small {
+      position: relative;
+      z-index: 1;
+      display: block;
+      max-width: 10rem;
+      font-size: .77rem;
+      line-height: 1.3;
+    }
+
+    .subpanel {
+      margin-top: .9rem;
+      padding: 1rem;
+      border: 1px solid #d4e0e6;
+      border-radius: 1rem;
+      background: #f8fbfc;
+    }
+
+    .eta-heading label, .training-title, .parameter-heading span:first-child { font-weight: 800; }
+
+    .eta-heading p, .training-copy {
+      margin: .18rem 0 0;
+      color: #657b8d;
+      font-size: .76rem;
+    }
+
+    .eta-output {
+      min-width: 3.7rem;
+      padding: .45rem .65rem;
+      border-radius: .7rem;
+      background: var(--teal);
+      color: white;
+      font-family: var(--mono);
+      font-size: 1rem;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin-top: 1.1rem;
+      accent-color: var(--teal);
+      cursor: pointer;
+    }
+
+    .slider-scale {
+      display: flex;
+      justify-content: space-between;
+      margin-top: .4rem;
+      color: #718596;
+      font-size: .68rem;
+    }
+
+    .training-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: .75rem;
+    }
+
+    .iteration-chip {
+      padding: .38rem .58rem;
+      border-radius: 999px;
+      background: #123b50;
+      color: white;
+      font-family: var(--mono);
+      font-size: .72rem;
+      white-space: nowrap;
+    }
+
+    .training-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .55rem;
+      margin-top: .85rem;
+    }
+
+    .action-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .45rem;
+      min-height: 2.65rem;
+      padding: .65rem 1rem;
+      border: 1px solid var(--teal);
+      border-radius: .7rem;
+      background: var(--teal);
+      color: white;
+      cursor: pointer;
+      font-weight: 800;
+      transition: 150ms ease;
+    }
+
+    .action-button:hover:not(:disabled), .action-button:focus-visible:not(:disabled) {
+      border-color: var(--teal-dark);
+      background: var(--teal-dark);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .action-button.secondary {
+      border-color: #c7d7df;
+      background: #e8f3f5;
+      color: #174e5c;
+    }
+
+    .action-button.outline {
+      border-color: #c7d7df;
+      background: white;
+      color: #284c5b;
+    }
+
+    .action-button.secondary:hover, .action-button.outline:hover {
+      border-color: #8bb8c1;
+      background: #dceff1;
+    }
+
+    .action-button:disabled { cursor: not-allowed; opacity: .45; }
+
+    .text-button {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      margin-top: .7rem;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: #526c7e;
+      cursor: pointer;
+      font-size: .75rem;
+      font-weight: 700;
+    }
+
+    .text-button:hover { color: var(--teal); }
+
+    .parameter-heading {
+      margin-bottom: .6rem;
+      color: #667d8e;
+      font-size: .78rem;
+    }
+
+    .parameter-heading span:last-child { font-family: var(--mono); }
+
+    .parameter-row {
+      display: grid;
+      grid-template-columns: 2rem 2.2rem 3rem 2.7rem 1rem minmax(2.8rem, 1fr);
+      align-items: center;
+      gap: .35rem;
+      min-height: 2.35rem;
+      border-top: 1px solid #e0e9ed;
+      font-family: var(--mono);
+      font-size: .8rem;
+    }
+
+    .parameter-name {
+      font-family: var(--serif);
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .parameter-operator { color: #718596; font-size: .68rem; }
+    .gradient-value { color: #c3543c; font-weight: 700; }
+    .parameter-arrow { color: #8da0ad; }
+
+    .parameter-result {
+      padding: .28rem .38rem;
+      border-radius: .45rem;
+      background: #e8eef1;
+      color: #8b9aa4;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .parameter-result.revealed { background: #d9f2ef; color: #086a75; }
+
+    .stage {
+      display: flex;
+      min-height: 37rem;
+      flex-direction: column;
+      padding: clamp(1.35rem, 3vw, 2.25rem);
+    }
+
+    .stage-topline {
+      color: #60788a;
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+
+    .stage-topline span:first-child { color: var(--teal); }
+
+    .stage h2 {
+      margin: .7rem 0 1.15rem;
+      font-size: clamp(1.8rem, 3vw, 2.7rem);
+      line-height: 1.08;
+    }
+
+    .equation-stack {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .75rem;
+    }
+
+    .equation-block, .result-block, .meaning-card, .note-card { border-radius: .95rem; }
+
+    .equation-block {
+      min-height: 7.3rem;
+      padding: 1rem;
+      border: 1px solid #d1dfe5;
+      background: #f4f8fa;
+    }
+
+    .equation-block.substitution { border-color: #c3e2e3; background: #e9f6f7; }
+
+    .block-label {
+      display: block;
+      margin-bottom: .6rem;
+      color: #6c8191;
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .equation-block code {
+      display: flex;
+      min-height: 3.7rem;
+      align-items: center;
+      color: #153c52;
+      font-family: var(--mono);
+      font-size: clamp(.88rem, 1.6vw, 1.15rem);
+      font-weight: 700;
+      line-height: 1.5;
+      white-space: normal;
+    }
+
+    .result-block {
+      grid-column: 1 / -1;
+      padding: 1rem 1.2rem;
+      background: #123b50;
+      color: white;
+    }
+
+    .result-block .block-label { color: #9fdde0; }
+
+    .result-block strong {
+      display: block;
+      overflow-wrap: anywhere;
+      font-family: var(--mono);
+      font-size: clamp(1.25rem, 2.4vw, 2rem);
+      letter-spacing: -.025em;
+    }
+
+    .meaning-card, .note-card {
+      margin-top: .8rem;
+      padding: .9rem 1rem;
+      border: 1px solid #d5e1e6;
+      background: white;
+    }
+
+    .meaning-card p, .note-card p {
+      margin: 0;
+      color: #405e70;
+      line-height: 1.48;
+    }
+
+    .note-card { border-color: #f0c9ad; background: #fff5ed; }
+    .note-card strong { display: block; margin-bottom: .3rem; color: #9b4b28; }
+    .note-card p { color: #78452f; font-size: .9rem; }
+
+    .next-cue {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      margin: auto 0 1rem;
+      padding-top: 1.1rem;
+      color: #60788a;
+      font-size: .83rem;
+    }
+
+    .next-cue b { color: var(--teal); }
+
+    .stage-controls {
+      padding-top: 1rem;
+      border-top: 1px solid #d9e4e9;
+    }
+
+    .stage-controls button { min-width: 8.2rem; min-height: 2.75rem; }
+
+    .history-section {
+      margin-top: 1.2rem;
+      padding: clamp(1.2rem, 2.5vw, 1.8rem);
+    }
+
+    .history-heading {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .history-heading h2 {
+      margin: 0;
+      font-size: clamp(1.7rem, 2.7vw, 2.35rem);
+    }
+
+    .history-heading > p {
+      max-width: 30rem;
+      margin: 0;
+      color: #60788a;
+      text-align: right;
+    }
+
+    .history-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(31rem, 1fr);
+      gap: .9rem;
+    }
+
+    .chart-card, .table-card {
+      overflow: hidden;
+      border: 1px solid #d4e0e6;
+      border-radius: 1rem;
+      background: #f8fbfc;
+    }
+
+    .chart-card { padding: 1rem; }
+
+    .chart-heading {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .75rem;
+    }
+
+    .metric {
+      padding: .75rem .85rem;
+      border-radius: .75rem;
+      background: white;
+    }
+
+    .metric span {
+      display: block;
+      color: #657b8d;
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: .25rem;
+      color: #123b50;
+      font-family: var(--mono);
+      font-size: 1.35rem;
+    }
+
+    #loss-chart { display: block; width: 100%; height: auto; margin-top: .65rem; }
+    .grid-line { stroke: #dce6eb; stroke-width: 1; }
+    .axis { stroke: #9eb2be; stroke-width: 1.2; }
+    .loss-line { fill: none; stroke: var(--teal); stroke-linecap: round; stroke-linejoin: round; stroke-width: 4; }
+    .loss-point { fill: #63c1c8; stroke: white; stroke-width: 2; }
+    .loss-point.latest { fill: #e76f51; stroke-width: 3; }
+    .chart-label { fill: #6d8292; font-family: Aptos, "Segoe UI", sans-serif; font-size: 12px; }
+    .chart-value { fill: #c3543c; font-family: var(--mono); font-size: 12px; font-weight: 700; }
+
+    .table-scroll { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: .78rem;
+    }
+
+    th, td { padding: .72rem .65rem; border-bottom: 1px solid #dce6eb; text-align: right; }
+    th { color: #60788a; font-family: Aptos, "Segoe UI", sans-serif; font-size: .73rem; }
+    th:first-child, td:first-child { text-align: left; }
+    tbody tr:first-child { background: #e8f7f7; }
+    td:first-child { color: var(--teal); font-weight: 800; }
+
+    footer {
+      padding: 1rem 0 0;
+      color: #718596;
+      font-size: .76rem;
+      text-align: center;
+    }
+
+    footer p { margin: 0; }
+
+    @media (max-width: 980px) {
+      .workspace-grid { grid-template-columns: 1fr; }
+      .panel { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
+      .panel-heading, .restore-defaults { grid-column: 1 / -1; }
+      .feature-grid, .subpanel { margin-top: 0; }
+      .history-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 680px) {
+      main { padding-top: 1.2rem; }
+      .site-header { display: block; }
+      .header-actions { justify-content: flex-start; margin-top: 1rem; }
+      .panel, .equation-stack { grid-template-columns: 1fr; }
+      .panel-heading, .restore-defaults, .result-block { grid-column: auto; }
+      .stage { min-height: 39rem; }
+      .stage-topline { align-items: flex-start; flex-direction: column; gap: .25rem; }
+      .stage-controls button { min-width: 0; }
+      .training-buttons, .chart-heading { grid-template-columns: 1fr; }
+      .history-heading { align-items: flex-start; flex-direction: column; }
+      .history-heading > p { text-align: left; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">APAI4011 · Logistic regression</p>
+        <h1>Gradient descent, step by step</h1>
+        <p class="header-copy">Start with the PDF example, change the features, then run as many updates as you need.</p>
+      </div>
+      <div class="header-actions">
+        <a class="pill-link" href="../../">← All demos</a>
+        <a class="pill-link" href="https://web.stanford.edu/~jurafsky/slp3/ed3book_jan26.pdf" target="_blank" rel="noreferrer">▤ Source chapter</a>
+      </div>
+    </header>
+
+    <nav class="step-nav" aria-label="Calculation steps">
+      <button class="step-button active" type="button" data-step="0"><span>1</span>Setup</button>
+      <button class="step-button" type="button" data-step="1"><span>2</span>Score</button>
+      <button class="step-button" type="button" data-step="2"><span>3</span>Sigmoid</button>
+      <button class="step-button" type="button" data-step="3"><span>4</span>Error</button>
+      <button class="step-button" type="button" data-step="4"><span>5</span>Gradient</button>
+      <button class="step-button" type="button" data-step="5"><span>6</span>Update</button>
+      <button class="step-button" type="button" data-step="6"><span>7</span>Check</button>
+    </nav>
+    <div class="progress-track" aria-hidden="true"><div class="progress-bar" id="progress-bar"></div></div>
+
+    <div class="workspace-grid">
+      <aside class="panel">
+        <div class="panel-heading">
+          <p class="eyebrow">Editable observation</p>
+          <span class="chip">y = 1 · positive</span>
+        </div>
+
+        <div class="feature-grid">
+          <div class="feature-card positive">
+            <label for="x1-input">x₁</label>
+            <input class="feature-input" id="x1-input" type="number" min="0" max="50" step="1" value="3" aria-describedby="x1-description">
+            <small id="x1-description">positive lexicon words · PDF default: 3</small>
+          </div>
+          <div class="feature-card negative">
+            <label for="x2-input">x₂</label>
+            <input class="feature-input" id="x2-input" type="number" min="0" max="50" step="1" value="2" aria-describedby="x2-description">
+            <small id="x2-description">negative lexicon words · PDF default: 2</small>
+          </div>
+        </div>
+
+        <div class="subpanel">
+          <div class="eta-heading">
+            <div>
+              <label for="eta-slider">Learning rate η</label>
+              <p>Changes step size, not the gradient.</p>
+            </div>
+            <output class="eta-output" id="eta-output" for="eta-slider">0.10</output>
+          </div>
+          <input id="eta-slider" type="range" min="0.01" max="0.20" step="0.01" value="0.10" aria-label="Learning rate">
+          <div class="slider-scale" aria-hidden="true"><span>0.01</span><span>PDF default: 0.10</span><span>0.20</span></div>
+        </div>
+
+        <div class="subpanel">
+          <div class="training-heading">
+            <div>
+              <span class="training-title">Multi-step training</span>
+              <p class="training-copy">Repeats this same y = 1 observation.</p>
+            </div>
+            <strong class="iteration-chip" id="iteration-chip">iteration 0</strong>
+          </div>
+          <div class="training-buttons">
+            <button class="action-button" id="run-one" type="button">▶ Run 1 step</button>
+            <button class="action-button secondary" id="run-ten" type="button">≫ Run 10 steps</button>
+          </div>
+          <button class="text-button" id="reset-model" type="button">↻ Reset parameters, keep inputs</button>
+        </div>
+
+        <div class="subpanel">
+          <div class="parameter-heading"><span>Current → next parameters</span><span>θᵗ → θᵗ⁺¹</span></div>
+          <div class="parameter-row" data-parameter="w1">
+            <span class="parameter-name">w₁</span><span class="before">0</span><span class="parameter-operator">− η ×</span><span class="gradient-value">—</span><span class="parameter-arrow">→</span><span class="parameter-result">—</span>
+          </div>
+          <div class="parameter-row" data-parameter="w2">
+            <span class="parameter-name">w₂</span><span class="before">0</span><span class="parameter-operator">− η ×</span><span class="gradient-value">—</span><span class="parameter-arrow">→</span><span class="parameter-result">—</span>
+          </div>
+          <div class="parameter-row" data-parameter="b">
+            <span class="parameter-name">b</span><span class="before">0</span><span class="parameter-operator">− η ×</span><span class="gradient-value">—</span><span class="parameter-arrow">→</span><span class="parameter-result">—</span>
+          </div>
+        </div>
+
+        <button class="text-button restore-defaults" id="restore-defaults" type="button">↻ Restore all PDF defaults</button>
+      </aside>
+
+      <section class="stage" aria-live="polite">
+        <div class="stage-topline"><span id="step-count">Step 1 of 7</span><span id="stage-eyebrow">Iteration 0 · current state</span></div>
+        <h2 id="stage-title">Set up the current training step</h2>
+
+        <div class="equation-stack">
+          <div class="equation-block">
+            <span class="block-label">General form</span>
+            <code id="stage-formula"></code>
+          </div>
+          <div class="equation-block substitution">
+            <span class="block-label">Substitute the values</span>
+            <code id="stage-substitution"></code>
+          </div>
+          <div class="result-block">
+            <span class="block-label">Result</span>
+            <strong id="stage-result"></strong>
+          </div>
+        </div>
+
+        <div class="meaning-card">
+          <span class="block-label">What this means</span>
+          <p id="stage-explanation"></p>
+        </div>
+
+        <div class="note-card" id="update-note" hidden>
+          <strong>Why can w₂ increase?</strong>
+          <p>This demo repeatedly trains on one positive review. Both active features are therefore reinforced. A real dataset needs negative reviews to teach the model that frequent negative words should push the prediction downward.</p>
+        </div>
+
+        <div class="next-cue"><b aria-hidden="true">→</b><span id="stage-cue"></span></div>
+
+        <div class="stage-controls">
+          <button class="action-button outline" id="previous-step" type="button">‹ Previous</button>
+          <button class="action-button" id="next-step" type="button">Next step ›</button>
+        </div>
+      </section>
+    </div>
+
+    <section class="history-section" aria-labelledby="history-title">
+      <div class="history-heading">
+        <div>
+          <p class="eyebrow">Multi-step view</p>
+          <h2 id="history-title">Training history</h2>
+        </div>
+        <p id="history-description">Every recorded update reuses x = [3, 2] and y = 1.</p>
+      </div>
+
+      <div class="history-grid">
+        <div class="chart-card">
+          <div class="chart-heading">
+            <div class="metric"><span>Cross-entropy loss</span><strong id="latest-loss">0.6931</strong></div>
+            <div class="metric"><span>Positive probability ŷ</span><strong id="latest-probability">0.5000</strong></div>
+          </div>
+          <svg id="loss-chart" viewBox="0 0 640 190" role="img" aria-label="Loss across gradient descent updates"></svg>
+        </div>
+
+        <div class="table-card table-scroll">
+          <table>
+            <thead><tr><th>Iteration</th><th>w₁</th><th>w₂</th><th>b</th><th>ŷ</th><th>Loss</th></tr></thead>
+            <tbody id="history-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <footer><p>The PDF works through one update. The extra controls repeat that observation so you can inspect how gradient descent evolves over multiple iterations.</p></footer>
+  </main>
+
+  <script>
+    "use strict";
+
+    const DEFAULT_FEATURES = { x1: 3, x2: 2 };
+    const INITIAL_PARAMETERS = { w1: 0, w2: 0, b: 0 };
+    const Y = 1;
+
+    const state = {
+      step: 0,
+      eta: 0.1,
+      features: { ...DEFAULT_FEATURES },
+      parameters: { ...INITIAL_PARAMETERS },
+      iteration: 0,
+      history: []
+    };
+
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => [...document.querySelectorAll(selector)];
+    const round = (value, digits = 4) => Number(value.toFixed(digits)).toString();
+
+    function evaluate(parameters = state.parameters, features = state.features) {
+      const z = parameters.w1 * features.x1 + parameters.w2 * features.x2 + parameters.b;
+      const yHat = 1 / (1 + Math.exp(-z));
+      const error = yHat - Y;
+      const gradient = {
+        w1: error * features.x1,
+        w2: error * features.x2,
+        b: error
+      };
+      const loss = -Math.log(Math.max(yHat, Number.EPSILON));
+      return { z, yHat, error, gradient, loss };
+    }
+
+    function updatedParameters(parameters, gradient, eta) {
+      return {
+        w1: parameters.w1 - eta * gradient.w1,
+        w2: parameters.w2 - eta * gradient.w2,
+        b: parameters.b - eta * gradient.b
+      };
+    }
+
+    function historyPoint(iteration, parameters, features = state.features) {
+      const metrics = evaluate(parameters, features);
+      return { iteration, ...parameters, yHat: metrics.yHat, loss: metrics.loss };
+    }
+
+    function resetModel() {
+      state.parameters = { ...INITIAL_PARAMETERS };
+      state.iteration = 0;
+      state.step = 0;
+      state.history = [historyPoint(0, state.parameters)];
+      render();
+    }
+
+    function restoreDefaults() {
+      state.features = { ...DEFAULT_FEATURES };
+      state.eta = 0.1;
+      $("#x1-input").value = "3";
+      $("#x2-input").value = "2";
+      $("#eta-slider").value = "0.10";
+      resetModel();
+    }
+
+    function normalizeFeature(rawValue) {
+      const parsed = Number(rawValue);
+      if (!Number.isFinite(parsed)) return 0;
+      return Math.min(50, Math.max(0, Math.round(parsed)));
+    }
+
+    function changeFeature(key, input) {
+      const value = normalizeFeature(input.value);
+      input.value = String(value);
+      state.features = { ...state.features, [key]: value };
+      resetModel();
+    }
+
+    function runSteps(count) {
+      for (let index = 0; index < count; index += 1) {
+        const metrics = evaluate();
+        state.parameters = updatedParameters(state.parameters, metrics.gradient, state.eta);
+        state.iteration += 1;
+        state.history.push(historyPoint(state.iteration, state.parameters));
+      }
+      state.history = state.history.slice(-101);
+      state.step = 6;
+      render();
+    }
+
+    function describeStep(metrics, nextParameters, nextMetrics) {
+      const theta = `[${round(state.parameters.w1, 3)}, ${round(state.parameters.w2, 3)}, ${round(state.parameters.b, 3)}]`;
+      const nextTheta = `[${round(nextParameters.w1, 3)}, ${round(nextParameters.w2, 3)}, ${round(nextParameters.b, 3)}]`;
+      const gradientVector = `[${round(metrics.gradient.w1, 3)}, ${round(metrics.gradient.w2, 3)}, ${round(metrics.gradient.b, 3)}]`;
+      const x = state.features;
+      const i = state.iteration;
+
+      return [
+        {
+          eyebrow: `Iteration ${i} · current state`,
+          title: "Set up the current training step",
+          formula: `x = [${x.x1}, ${x.x2}], y = 1, θᵗ = ${theta}`,
+          substitution: `${x.x1} positive words · ${x.x2} negative words · positive review`,
+          result: `η = ${state.eta.toFixed(2)}`,
+          explanation: i === 0
+            ? "The PDF example starts with all three parameters at zero. You can change x₁ and x₂; doing so resets the model so the new run stays easy to interpret."
+            : "These parameters came from the previous updates. This iteration now treats them as the starting point for the next gradient step.",
+          cue: "Next, combine the current parameters and features into a linear score."
+        },
+        {
+          eyebrow: `Iteration ${i} · forward pass`,
+          title: "Compute the linear score",
+          formula: "z = w₁x₁ + w₂x₂ + b",
+          substitution: `z = (${round(state.parameters.w1, 3)} × ${x.x1}) + (${round(state.parameters.w2, 3)} × ${x.x2}) + ${round(state.parameters.b, 3)}`,
+          result: `z = ${round(metrics.z)}`,
+          explanation: i === 0
+            ? "With the PDF defaults, every parameter is zero, so neither feature influences the first prediction."
+            : "After training, the score reflects everything the current parameters have learned from the repeated observation.",
+          cue: "The sigmoid will turn this score into a probability."
+        },
+        {
+          eyebrow: `Iteration ${i} · forward pass`,
+          title: "Convert the score to a probability",
+          formula: "ŷ = σ(z) = 1 / (1 + e⁻ᶻ)",
+          substitution: `ŷ = σ(${round(metrics.z)})`,
+          result: `ŷ = ${metrics.yHat.toFixed(4)}`,
+          explanation: "This is the model’s probability for the positive class before the next update.",
+          cue: "Compare this prediction with the true label y = 1."
+        },
+        {
+          eyebrow: `Iteration ${i} · error signal`,
+          title: "Measure the direction of the mistake",
+          formula: "δ = ŷ − y",
+          substitution: `δ = ${metrics.yHat.toFixed(4)} − 1`,
+          result: `δ = ${round(metrics.error)}`,
+          explanation: "Because this observation is positive, a negative error means the prediction is still too low. As ŷ approaches 1, the error shrinks toward zero.",
+          cue: "Multiply this shared error signal by each input feature."
+        },
+        {
+          eyebrow: `Iteration ${i} · gradient`,
+          title: "Compute one gradient per parameter",
+          formula: "∇L = [(ŷ−y)x₁, (ŷ−y)x₂, ŷ−y]",
+          substitution: `∇L = [(${round(metrics.error)})(${x.x1}), (${round(metrics.error)})(${x.x2}), ${round(metrics.error)}]`,
+          result: `∇L = ${gradientVector}`,
+          explanation: "The gradient changes at every iteration because the current prediction changes. The learning rate still does not appear inside the gradient.",
+          cue: "Now scale this gradient by η and move in the opposite direction."
+        },
+        {
+          eyebrow: `Iteration ${i} → ${i + 1}`,
+          title: "Preview the next parameter update",
+          formula: "θᵗ⁺¹ = θᵗ − η∇L",
+          substitution: `θᵗ⁺¹ = ${theta} − ${state.eta.toFixed(2)}${gradientVector}`,
+          result: `θᵗ⁺¹ = ${nextTheta}`,
+          explanation: "This panel previews the next parameters. Use “Apply this update” or the multi-step controls to commit the change.",
+          cue: "Check the predicted probability and loss after the previewed update."
+        },
+        {
+          eyebrow: `Preview iteration ${i + 1}`,
+          title: "Check that the next update reduces loss",
+          formula: "zᵗ⁺¹ = w₁ᵗ⁺¹x₁ + w₂ᵗ⁺¹x₂ + bᵗ⁺¹",
+          substitution: `zᵗ⁺¹ = (${round(nextParameters.w1, 3)} × ${x.x1}) + (${round(nextParameters.w2, 3)} × ${x.x2}) + ${round(nextParameters.b, 3)}`,
+          result: `ŷ: ${metrics.yHat.toFixed(4)} → ${nextMetrics.yHat.toFixed(4)}`,
+          explanation: `Cross-entropy would fall from ${metrics.loss.toFixed(4)} to ${nextMetrics.loss.toFixed(4)}. Apply the update to make iteration ${i + 1} the new current state.`,
+          cue: "Apply one step, run ten steps, or change the feature counts and begin again."
+        }
+      ];
+    }
+
+    function renderParameters(metrics, nextParameters) {
+      const revealGradient = state.step >= 4;
+      const revealResult = state.step >= 5;
+      ["w1", "w2", "b"].forEach((key) => {
+        const row = document.querySelector(`[data-parameter="${key}"]`);
+        row.querySelector(".before").textContent = round(state.parameters[key], 3);
+        row.querySelector(".gradient-value").textContent = revealGradient ? round(metrics.gradient[key], 3) : "—";
+        const result = row.querySelector(".parameter-result");
+        result.textContent = revealResult ? round(nextParameters[key], 3) : "—";
+        result.classList.toggle("revealed", revealResult);
+      });
+    }
+
+    function renderChart() {
+      const width = 640;
+      const height = 190;
+      const padding = 28;
+      const latest = state.history[state.history.length - 1];
+      const maxIteration = Math.max(1, latest.iteration);
+      const maxLoss = Math.max(.01, ...state.history.map((point) => point.loss));
+      const coordinates = state.history.map((point) => ({
+        x: padding + (point.iteration / maxIteration) * (width - padding * 2),
+        y: height - padding - (point.loss / maxLoss) * (height - padding * 2)
+      }));
+      const points = coordinates.map((point) => `${point.x},${point.y}`).join(" ");
+      const last = coordinates[coordinates.length - 1];
+      const horizontalLines = [.25, .5, .75].map((fraction) =>
+        `<line x1="${padding}" x2="${width - padding}" y1="${padding + fraction * (height - padding * 2)}" y2="${padding + fraction * (height - padding * 2)}" class="grid-line"></line>`
+      ).join("");
+      const circles = coordinates.map((point, index) =>
+        `<circle cx="${point.x}" cy="${point.y}" r="${index === coordinates.length - 1 ? 5 : 2.5}" class="loss-point${index === coordinates.length - 1 ? " latest" : ""}"></circle>`
+      ).join("");
+
+      $("#loss-chart").innerHTML = `
+        ${horizontalLines}
+        <line x1="${padding}" x2="${width - padding}" y1="${height - padding}" y2="${height - padding}" class="axis"></line>
+        ${coordinates.length > 1 ? `<polyline points="${points}" class="loss-line"></polyline>` : ""}
+        ${circles}
+        <text x="${padding}" y="${height - 7}" class="chart-label">iteration 0</text>
+        <text x="${width - padding}" y="${height - 7}" text-anchor="end" class="chart-label">iteration ${latest.iteration}</text>
+        <text x="${Math.min(width - 58, last.x + 10)}" y="${Math.max(16, last.y - 10)}" class="chart-value">${latest.loss.toFixed(3)}</text>`;
+      $("#loss-chart").setAttribute("aria-label", `Loss across ${latest.iteration} gradient descent updates`);
+    }
+
+    function renderHistory() {
+      const latest = state.history[state.history.length - 1];
+      $("#latest-loss").textContent = latest.loss.toFixed(4);
+      $("#latest-probability").textContent = latest.yHat.toFixed(4);
+      $("#history-description").textContent = `Every recorded update reuses x = [${state.features.x1}, ${state.features.x2}] and y = 1.`;
+      const rows = state.history.slice(-7).reverse().map((point) => `
+        <tr>
+          <td>${point.iteration}</td>
+          <td>${point.w1.toFixed(3)}</td>
+          <td>${point.w2.toFixed(3)}</td>
+          <td>${point.b.toFixed(3)}</td>
+          <td>${point.yHat.toFixed(4)}</td>
+          <td>${point.loss.toFixed(4)}</td>
+        </tr>`).join("");
+      $("#history-body").innerHTML = rows;
+      renderChart();
+    }
+
+    function render() {
+      const metrics = evaluate();
+      const nextParameters = updatedParameters(state.parameters, metrics.gradient, state.eta);
+      const nextMetrics = evaluate(nextParameters, state.features);
+      const steps = describeStep(metrics, nextParameters, nextMetrics);
+      const active = steps[state.step];
+
+      $$(".step-button").forEach((button, index) => {
+        button.classList.toggle("active", index === state.step);
+        button.classList.toggle("done", index < state.step);
+        button.setAttribute("aria-current", index === state.step ? "step" : "false");
+      });
+      $("#progress-bar").style.width = `${((state.step + 1) / steps.length) * 100}%`;
+      $("#eta-output").textContent = state.eta.toFixed(2);
+      $("#iteration-chip").textContent = `iteration ${state.iteration}`;
+      $("#step-count").textContent = `Step ${state.step + 1} of ${steps.length}`;
+      $("#stage-eyebrow").textContent = active.eyebrow;
+      $("#stage-title").textContent = active.title;
+      $("#stage-formula").textContent = active.formula;
+      $("#stage-substitution").textContent = active.substitution;
+      $("#stage-result").textContent = active.result;
+      $("#stage-explanation").textContent = active.explanation;
+      $("#stage-cue").textContent = active.cue;
+      $("#update-note").hidden = state.step !== 5;
+
+      const previous = $("#previous-step");
+      previous.disabled = state.step === 0;
+      const next = $("#next-step");
+      next.textContent = state.step === steps.length - 1 ? "Apply this update ▶" : "Next step ›";
+
+      renderParameters(metrics, nextParameters);
+      renderHistory();
+    }
+
+    $$(".step-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.step = Number(button.dataset.step);
+        render();
+      });
+    });
+    $("#x1-input").addEventListener("change", (event) => changeFeature("x1", event.currentTarget));
+    $("#x2-input").addEventListener("change", (event) => changeFeature("x2", event.currentTarget));
+    $("#eta-slider").addEventListener("input", (event) => {
+      state.eta = Number(event.currentTarget.value);
+      render();
+    });
+    $("#run-one").addEventListener("click", () => runSteps(1));
+    $("#run-ten").addEventListener("click", () => runSteps(10));
+    $("#reset-model").addEventListener("click", resetModel);
+    $("#restore-defaults").addEventListener("click", restoreDefaults);
+    $("#previous-step").addEventListener("click", () => {
+      state.step = Math.max(0, state.step - 1);
+      render();
+    });
+    $("#next-step").addEventListener("click", () => {
+      if (state.step === 6) runSteps(1);
+      else {
+        state.step += 1;
+        render();
+      }
+    });
+
+    state.history = [historyPoint(0, state.parameters)];
+    render();
+  </script>
+</body>
+</html>
