@@ -110,26 +110,9 @@
       transform: translateY(-1px);
     }
 
-    .idea-strip {
-      display: grid;
-      grid-template-columns: auto 1fr auto 1fr auto;
-      align-items: center;
-      gap: .75rem;
-      margin-bottom: 1rem;
-      padding: .85rem 1rem;
-      border: 1px solid #bfd7df;
-      border-radius: 1rem;
-      background: rgba(238, 249, 250, .88);
-      color: #315568;
-      font-size: .92rem;
-    }
-
-    .idea-strip strong { color: var(--teal-dark); }
-    .idea-arrow { color: #7a929f; font-size: 1.2rem; }
-
     .step-nav {
       display: grid;
-      grid-template-columns: repeat(7, minmax(7.1rem, 1fr));
+      grid-template-columns: repeat(4, minmax(9rem, 1fr));
       gap: .5rem;
       overflow-x: auto;
       padding-bottom: .5rem;
@@ -350,7 +333,32 @@
     .pair-arrow { color: #7b929f; }
 
     .training-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-top: .72rem; }
-    .training-buttons .wide { grid-column: 1 / -1; }
+
+    .training-guide {
+      margin: .65rem 0 0;
+      padding-top: .6rem;
+      border-top: 1px solid #dce6eb;
+      color: #60788a;
+      font-size: .78rem;
+      line-height: 1.45;
+    }
+
+    .settings-disclosure {
+      margin-top: .82rem;
+      border: 1px solid #d5e1e6;
+      border-radius: .9rem;
+      background: #f8fbfc;
+    }
+
+    .settings-disclosure summary {
+      padding: .88rem .95rem;
+      color: #294d60;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .settings-content { padding: 0 .9rem .9rem; }
+    .settings-content .subpanel { margin-top: .65rem; background: white; }
 
     .text-button {
       margin-top: .62rem;
@@ -428,6 +436,7 @@
     }
 
     .one-hot { display: flex; gap: .34rem; min-width: max-content; }
+    .one-hot + .mini-table { margin-top: .75rem; }
     .vector-cell { min-width: 3.2rem; padding: .45rem .35rem; border-radius: .45rem; background: #e7eef2; color: #526c7e; font-family: var(--mono); font-size: .76rem; text-align: center; }
     .vector-cell strong { display: block; margin-bottom: .2rem; color: #688091; font-family: Aptos, "Segoe UI", sans-serif; font-size: .62rem; font-weight: 750; }
     .vector-cell.active { background: var(--teal); color: white; }
@@ -475,12 +484,12 @@
     .word-dot.context-dot { fill: var(--orange); stroke-width: 4; }
     .word-label { fill: #294d60; font-family: var(--mono); font-size: 12px; font-weight: 700; paint-order: stroke; stroke: #f8fbfc; stroke-width: 4px; stroke-linejoin: round; }
 
-    .metric-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: .62rem; margin-bottom: .85rem; }
+    .metric-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: .62rem; margin-bottom: .85rem; }
     .metric { padding: .68rem .76rem; border-radius: .7rem; background: white; }
     .metric span { display: block; color: #657b8d; font-size: .67rem; font-weight: 800; letter-spacing: .035em; text-transform: uppercase; }
     .metric strong { display: block; margin-top: .23rem; overflow: hidden; color: #123b50; font-family: var(--mono); font-size: 1.08rem; text-overflow: ellipsis; white-space: nowrap; }
 
-    .history-grid { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(29rem, 1fr); gap: .85rem; }
+    .history-grid { display: grid; grid-template-columns: 1fr; gap: .85rem; }
     .loss-line { fill: none; stroke: var(--teal); stroke-linecap: round; stroke-linejoin: round; stroke-width: 4; }
     .loss-point { fill: #63c1c8; stroke: white; stroke-width: 2; }
     .loss-point.latest { fill: var(--orange); stroke-width: 3; }
@@ -507,15 +516,13 @@
       main { padding-top: 1.1rem; }
       .site-header { display: block; }
       .header-actions { justify-content: flex-start; margin-top: .9rem; }
-      .idea-strip { grid-template-columns: 1fr; gap: .3rem; }
-      .idea-arrow { transform: rotate(90deg); justify-self: start; }
       .panel, .equation-stack { grid-template-columns: 1fr; }
       .panel-heading, .result-block { grid-column: auto; }
       .stage { min-height: 41rem; }
       .stage-topline, .visual-heading, .history-heading { align-items: flex-start; flex-direction: column; }
       .visual-heading > p, .history-heading > p { text-align: left; }
       .stage-controls button { min-width: 0; }
-      .metric-row { grid-template-columns: 1fr 1fr; }
+      .metric-row { grid-template-columns: 1fr; }
       .visual-grid { grid-template-columns: minmax(0, 1fr); }
     }
 
@@ -536,54 +543,20 @@
       </div>
     </header>
 
-    <div class="idea-strip" aria-label="Core Word2Vec idea">
-      <span><strong>1 · Observe</strong> nearby words</span><span class="idea-arrow" aria-hidden="true">→</span>
-      <span><strong>2 · Predict</strong> the context</span><span class="idea-arrow" aria-hidden="true">→</span>
-      <span><strong>3 · Learn</strong> useful vectors</span>
-    </div>
-
     <nav class="step-nav" aria-label="Word2Vec calculation steps">
-      <button class="step-button active" type="button" data-step="0"><span>1</span>Pair</button>
-      <button class="step-button" type="button" data-step="1"><span>2</span>One-hot</button>
-      <button class="step-button" type="button" data-step="2"><span>3</span>Lookup</button>
-      <button class="step-button" type="button" data-step="3"><span>4</span>Scores</button>
-      <button class="step-button" type="button" data-step="4"><span>5</span>Softmax</button>
-      <button class="step-button" type="button" data-step="5"><span>6</span>Loss &amp; gradient</button>
-      <button class="step-button" type="button" data-step="6"><span>7</span>Update</button>
+      <button class="step-button active" type="button" data-step="0"><span>1</span>Context pair</button>
+      <button class="step-button" type="button" data-step="1"><span>2</span>Lookup embedding</button>
+      <button class="step-button" type="button" data-step="2"><span>3</span>Predict context</button>
+      <button class="step-button" type="button" data-step="3"><span>4</span>Learn from error</button>
     </nav>
     <div class="progress-track" aria-hidden="true"><div class="progress-bar" id="progress-bar"></div></div>
 
     <div class="workspace-grid">
       <aside class="panel">
         <div class="panel-heading">
-          <p class="eyebrow">Tiny training laboratory</p>
+          <p class="eyebrow">Try one pair</p>
           <span class="chip">Skip-gram · full softmax</span>
         </div>
-
-        <section class="subpanel">
-          <div class="control-heading">
-            <div>
-              <label for="corpus-input">Editable corpus</label>
-              <p class="support-copy">One sentence per line; use 2–14 unique words.</p>
-            </div>
-          </div>
-          <textarea id="corpus-input" spellcheck="false">cats chase mice
-dogs chase balls
-cats eat fish
-dogs eat meat</textarea>
-          <div class="compact-controls">
-            <div>
-              <label for="window-select">Window size</label>
-              <select id="window-select"><option value="1" selected>1 word</option><option value="2">2 words</option></select>
-            </div>
-            <div>
-              <label for="dimension-display">Dimensions</label>
-              <select id="dimension-display" disabled><option>2 (for plotting)</option></select>
-            </div>
-          </div>
-          <button class="action-button secondary full-button" id="apply-corpus" type="button">Use this corpus</button>
-          <p class="status-message" id="corpus-status" aria-live="polite"></p>
-        </section>
 
         <section class="subpanel">
           <div class="pair-heading">
@@ -605,36 +578,62 @@ dogs eat meat</textarea>
         </section>
 
         <section class="subpanel">
-          <div class="control-heading">
-            <div>
-              <label for="eta-slider">Learning rate η</label>
-              <p class="support-copy">Controls the size of each update.</p>
-            </div>
-            <output class="eta-value" id="eta-output" for="eta-slider">0.10</output>
-          </div>
-          <input id="eta-slider" type="range" min="0.01" max="0.30" step="0.01" value="0.10">
-          <div class="slider-scale" aria-hidden="true"><span>0.01</span><span>0.10</span><span>0.30</span></div>
-        </section>
-
-        <section class="subpanel">
           <div class="training-heading">
             <div>
-              <span class="training-title">Train the model</span>
-              <p class="support-copy">An epoch visits every generated pair once.</p>
+              <span class="training-title">Apply training</span>
+              <p class="support-copy">Training controls are separate from the walkthrough.</p>
             </div>
             <strong class="counter-chip" id="update-counter">0 updates</strong>
           </div>
           <div class="training-buttons">
-            <button class="action-button" id="run-pair" type="button">▶ Update this pair</button>
-            <button class="action-button secondary" id="run-epoch" type="button">Run 1 epoch</button>
-            <button class="action-button secondary wide" id="run-twenty" type="button">≫ Run 20 epochs</button>
+            <button class="action-button" id="run-pair" type="button">▶ Apply 1 update</button>
+            <button class="action-button secondary" id="run-twenty" type="button">Train 20 epochs</button>
           </div>
+          <p class="training-guide"><strong>1 update</strong> uses only the selected pair once. <strong>20 epochs</strong> visits every pair in the corpus 20 times.</p>
           <button class="text-button" id="reset-model" type="button">↻ Reset vectors, keep corpus</button>
         </section>
+
+        <details class="settings-disclosure">
+          <summary>Corpus and training settings</summary>
+          <div class="settings-content">
+            <section class="subpanel">
+              <div class="control-heading">
+                <div>
+                  <label for="corpus-input">Editable corpus</label>
+                  <p class="support-copy">One sentence per line; use 2–14 unique words.</p>
+                </div>
+              </div>
+              <textarea id="corpus-input" spellcheck="false">cats chase mice
+dogs chase balls
+cats eat fish
+dogs eat meat</textarea>
+              <div class="compact-controls">
+                <div>
+                  <label for="window-select">Window size</label>
+                  <select id="window-select"><option value="1" selected>1 word</option><option value="2">2 words</option></select>
+                </div>
+              </div>
+              <button class="action-button secondary full-button" id="apply-corpus" type="button">Use this corpus</button>
+              <p class="status-message" id="corpus-status" aria-live="polite"></p>
+            </section>
+
+            <section class="subpanel">
+              <div class="control-heading">
+                <div>
+                  <label for="eta-slider">Learning rate η</label>
+                  <p class="support-copy">Controls the size of each update.</p>
+                </div>
+                <output class="eta-value" id="eta-output" for="eta-slider">0.10</output>
+              </div>
+              <input id="eta-slider" type="range" min="0.01" max="0.30" step="0.01" value="0.10">
+              <div class="slider-scale" aria-hidden="true"><span>0.01</span><span>0.10</span><span>0.30</span></div>
+            </section>
+          </div>
+        </details>
       </aside>
 
       <section class="stage" aria-live="polite">
-        <div class="stage-topline"><span id="step-count">Step 1 of 7</span><span id="stage-eyebrow">Create supervision from proximity</span></div>
+        <div class="stage-topline"><span id="step-count">Step 1 of 4</span><span id="stage-eyebrow">Create supervision from proximity</span></div>
         <h2 id="stage-title">Turn nearby words into a training pair</h2>
 
         <div class="equation-stack">
@@ -660,7 +659,7 @@ dogs eat meat</textarea>
         <div class="step-detail" id="step-detail"></div>
 
         <div class="teaching-note" id="teaching-note">
-          <span class="block-label">Keep the two matrices distinct</span>
+          <span class="block-label">Key point</span>
           <p id="teaching-note-copy"></p>
         </div>
 
@@ -699,19 +698,12 @@ dogs eat meat</textarea>
         <p>Average loss is evaluated over every pair in the current corpus.</p>
       </div>
       <div class="metric-row">
-        <div class="metric"><span>Average loss</span><strong id="average-loss">—</strong></div>
-        <div class="metric"><span>Current pair loss</span><strong id="pair-loss">—</strong></div>
+        <div class="metric"><span>Corpus average loss</span><strong id="average-loss">—</strong></div>
         <div class="metric"><span>True-context probability</span><strong id="context-probability">—</strong></div>
         <div class="metric"><span>Nearest to center</span><strong id="nearest-word">—</strong></div>
       </div>
       <div class="history-grid">
         <div class="chart-card"><svg id="loss-chart" viewBox="0 0 640 210" role="img" aria-label="Average loss during Word2Vec training"></svg></div>
-        <div class="table-card table-scroll">
-          <table class="history-table">
-            <thead><tr><th>Checkpoint</th><th>Updates</th><th>Average loss</th><th>Pair loss</th><th>P(context)</th></tr></thead>
-            <tbody id="history-body"></tbody>
-          </table>
-        </div>
       </div>
     </section>
 
@@ -877,7 +869,7 @@ dogs eat meat`;
     function trainCurrentPair() {
       updatePair(currentPair());
       recordHistory("Pair");
-      state.step = 6;
+      state.step = 3;
       render();
     }
 
@@ -887,7 +879,7 @@ dogs eat meat`;
         state.epochs += 1;
         recordHistory(`Epoch ${state.epochs}`);
       }
-      state.step = 6;
+      state.step = 3;
       render();
     }
 
@@ -927,22 +919,13 @@ dogs eat meat`;
         return `<div class="pair-equation"><span class="word-badge center">${escapeHtml(pair.center)}</span><span class="pair-arrow">predicts →</span><span class="word-badge context">${escapeHtml(pair.context)}</span></div>`;
       }
       if (step === 1) {
-        return `<div class="one-hot">${state.vocabulary.map((word, index) => `<span class="vector-cell${index === metrics.centerIndex ? " active" : ""}"><strong>${escapeHtml(word)}</strong>${index === metrics.centerIndex ? 1 : 0}</span>`).join("")}</div>`;
+        return `<div class="one-hot">${state.vocabulary.map((word, index) => `<span class="vector-cell${index === metrics.centerIndex ? " active" : ""}"><strong>${escapeHtml(word)}</strong>${index === metrics.centerIndex ? 1 : 0}</span>`).join("")}</div><table class="mini-table"><tbody><tr class="highlight"><td>Selected row W<sub>in</sub>[“${escapeHtml(pair.center)}”]</td><td>${escapeHtml(vectorText(metrics.centerVector, 4))}</td></tr></tbody></table>`;
       }
       if (step === 2) {
-        return `<table class="mini-table"><thead><tr><th>W<sub>in</sub> row</th><th>dimension 1</th><th>dimension 2</th></tr></thead><tbody>${state.vocabulary.map((word, index) => `<tr class="${index === metrics.centerIndex ? "highlight" : ""}"><td>${escapeHtml(word)}</td><td>${format(state.wIn[index][0], 3)}</td><td>${format(state.wIn[index][1], 3)}</td></tr>`).join("")}</tbody></table>`;
-      }
-      if (step === 3) {
-        return `<table class="mini-table"><thead><tr><th>candidate context</th><th>u<sub>w</sub></th><th>u<sub>w</sub> · v<sub>${escapeHtml(pair.center)}</sub></th></tr></thead><tbody>${state.vocabulary.map((word, index) => `<tr class="${index === metrics.contextIndex ? "context-row" : ""}"><td>${escapeHtml(word)}</td><td>${escapeHtml(vectorText(state.wOut[index], 3))}</td><td>${format(metrics.scores[index], 4)}</td></tr>`).join("")}</tbody></table>`;
-      }
-      if (step === 4) {
-        return `<div class="probability-list">${probabilityRows(metrics)}</div>`;
-      }
-      if (step === 5) {
-        return `<table class="mini-table"><thead><tr><th>quantity</th><th>value</th></tr></thead><tbody><tr><td>δ = p − y</td><td>${escapeHtml(vectorText(metrics.delta, 3))}</td></tr><tr class="highlight"><td>∂L/∂v<sub>${escapeHtml(pair.center)}</sub></td><td>${escapeHtml(vectorText(metrics.gradientCenter, 4))}</td></tr><tr class="context-row"><td>∂L/∂u<sub>${escapeHtml(pair.context)}</sub></td><td>${escapeHtml(vectorText(metrics.gradientOutput[metrics.contextIndex], 4))}</td></tr></tbody></table>`;
+        return `<table class="mini-table"><thead><tr><th>candidate context</th><th>score u<sub>w</sub> · v</th><th>softmax probability</th></tr></thead><tbody>${state.vocabulary.map((word, index) => `<tr class="${index === metrics.contextIndex ? "context-row highlight" : ""}"><td>${escapeHtml(word)}</td><td>${format(metrics.scores[index], 4)}</td><td>${format(metrics.probabilities[index], 4)}</td></tr>`).join("")}</tbody></table>`;
       }
       const preview = previewUpdate(metrics);
-      return `<table class="mini-table"><thead><tr><th>vector</th><th>before</th><th>after one update</th></tr></thead><tbody><tr class="highlight"><td>v<sub>${escapeHtml(pair.center)}</sub></td><td>${escapeHtml(vectorText(metrics.centerVector, 4))}</td><td>${escapeHtml(vectorText(preview.center, 4))}</td></tr><tr class="context-row"><td>u<sub>${escapeHtml(pair.context)}</sub></td><td>${escapeHtml(vectorText(state.wOut[metrics.contextIndex], 4))}</td><td>${escapeHtml(vectorText(preview.contextOutput, 4))}</td></tr></tbody></table>`;
+      return `<table class="mini-table"><thead><tr><th>quantity</th><th>current value</th><th>after one update</th></tr></thead><tbody><tr><td>Loss</td><td>${format(metrics.loss, 4)}</td><td>—</td></tr><tr><td>∇v<sub>${escapeHtml(pair.center)}</sub></td><td>${escapeHtml(vectorText(metrics.gradientCenter, 4))}</td><td>—</td></tr><tr class="highlight"><td>v<sub>${escapeHtml(pair.center)}</sub></td><td>${escapeHtml(vectorText(metrics.centerVector, 4))}</td><td>${escapeHtml(vectorText(preview.center, 4))}</td></tr><tr class="context-row"><td>u<sub>${escapeHtml(pair.context)}</sub></td><td>${escapeHtml(vectorText(state.wOut[metrics.contextIndex], 4))}</td><td>${escapeHtml(vectorText(preview.contextOutput, 4))}</td></tr></tbody></table>`;
     }
 
     function describeSteps(metrics) {
@@ -957,68 +940,38 @@ dogs eat meat`;
           substitution: `window = ${state.windowSize}; center = “${pair.center}”`,
           result: `(${pair.center} → ${pair.context})`,
           explanation: "Skip-gram treats a nearby word as the prediction target. Moving the window through the corpus creates many supervised pairs without manual labels.",
-          cue: "Represent the center word as a vocabulary-sized one-hot vector.",
+          cue: "Use the center word to retrieve one dense vector.",
           note: "Proximity supplies the training signal; it does not guarantee that every nearby word has the same semantic relation."
         },
         {
-          eyebrow: "Encode identity, not meaning",
-          title: "Represent the center word as one-hot",
-          formula: `x ∈ {0,1}^${vocabularySize}; Σxᵢ = 1`,
-          substitution: `index(“${pair.center}”) = ${metrics.centerIndex}`,
-          result: `x_${pair.center} = [${state.vocabulary.map((_, index) => index === metrics.centerIndex ? 1 : 0).join(", ")}]`,
-          explanation: "The one-hot vector only identifies a vocabulary item. It contains no graded similarity: every pair of distinct one-hot vectors is equally different.",
-          cue: "Multiplying by the input matrix selects one row: the center embedding.",
-          note: "The useful representation is not the one-hot vector. It is the dense row learned inside W_in."
-        },
-        {
           eyebrow: "Embedding lookup",
-          title: "Select the center word’s dense vector",
+          title: "Use one-hot to look up the center embedding",
           formula: "v_center = W_inᵀx",
-          substitution: `v_${pair.center} = W_in[“${pair.center}”]`,
+          substitution: `x_${pair.center} = [${state.vocabulary.map((_, index) => index === metrics.centerIndex ? 1 : 0).join(", ")}]`,
           result: `v_${pair.center} = ${vectorText(metrics.centerVector)}`,
-          explanation: "Because x has one non-zero entry, matrix multiplication simply retrieves one row. Training will change this row so it becomes useful for predicting contexts.",
-          cue: "Compare this center vector with every row of the output matrix.",
-          note: "Word2Vec learns two matrices: W_in supplies center vectors v; W_out supplies candidate-context vectors u. The scatter plot below displays W_in."
+          explanation: "The one-hot vector only identifies the word. Multiplying by W_in simply selects its dense row; this row is the embedding that training will improve.",
+          cue: "Score each possible context word and normalize the scores.",
+          note: "Word2Vec learns two matrices: W_in supplies center vectors v; W_out supplies candidate-context vectors u."
         },
         {
-          eyebrow: "Linear prediction",
-          title: "Score every possible context word",
-          formula: "s_w = u_wᵀv_center",
-          substitution: `s_${pair.context} = ${vectorText(state.wOut[metrics.contextIndex])} · ${vectorText(metrics.centerVector)}`,
-          result: `s_${pair.context} = ${format(metrics.scores[metrics.contextIndex])}`,
-          explanation: "A larger dot product means the current model considers that candidate more compatible with the center word. Scores are not probabilities yet.",
-          cue: "Normalize all vocabulary scores with softmax.",
-          note: "The score uses v from W_in and u from W_out—not two rows from the same matrix."
-        },
-        {
-          eyebrow: "Normalize competing candidates",
-          title: "Convert scores into context probabilities",
-          formula: "P(w|center) = exp(s_w) / Σ_j exp(s_j)",
-          substitution: `P(${pair.context}|${pair.center}) = exp(${format(metrics.scores[metrics.contextIndex], 3)}) / Σ_j exp(s_j)`,
+          eyebrow: "Context prediction",
+          title: "Score candidates and apply softmax",
+          formula: "s_w = u_wᵀv_center; P(w|center) = softmax(s_w)",
+          substitution: `s_${pair.context} = ${format(metrics.scores[metrics.contextIndex], 4)}`,
           result: `P(${pair.context}|${pair.center}) = ${format(metrics.probabilities[metrics.contextIndex])}`,
-          explanation: `All ${vocabularySize} candidates compete for probability mass. Their probabilities sum to one; the orange bar marks the observed context.`,
-          cue: "Use the observed context to measure prediction error.",
-          note: "Full softmax is transparent for this tiny vocabulary, but its denominator becomes expensive when the vocabulary is large."
+          explanation: `The dot products measure compatibility. Softmax makes all ${vocabularySize} candidates compete, producing probabilities that sum to one.`,
+          cue: "Compare the true context probability with the target and compute a learning signal.",
+          note: "The score combines one row from W_in with each candidate row from W_out."
         },
         {
-          eyebrow: "Learning signal",
-          title: "Compute loss and backpropagate the error",
-          formula: "L = −log P(context|center); ∂L/∂s = p − y",
-          substitution: `L = −log(${format(metrics.probabilities[metrics.contextIndex])})`,
-          result: `L = ${format(metrics.loss)}; ∇v_${pair.center} = ${vectorText(metrics.gradientCenter)}`,
-          explanation: "The target candidate receives p−1; every other candidate receives p. These score gradients flow into both the selected input vector and all output vectors.",
-          cue: "Move the affected vectors opposite their gradients.",
-          note: "A single pair changes one row of W_in, but every row of W_out under full softmax. Negative sampling updates only a small set of output rows."
-        },
-        {
-          eyebrow: `Gradient descent · η = ${state.eta.toFixed(2)}`,
-          title: "Update the vectors, then learn from more pairs",
-          formula: "parameter_new = parameter_old − η × gradient",
-          substitution: `v_${pair.center}′ = ${vectorText(metrics.centerVector)} − ${state.eta.toFixed(2)} × ${vectorText(metrics.gradientCenter)}`,
+          eyebrow: "Loss, gradient, and update preview",
+          title: "Learn from the prediction error",
+          formula: "L = −log P(context|center); v′ = v − η∇v",
+          substitution: `∇v_${pair.center} = ${vectorText(metrics.gradientCenter)}; η = ${state.eta.toFixed(2)}`,
           result: `v_${pair.center}′ = ${vectorText(preview.center)}`,
-          explanation: "One update only improves one local prediction. Repeating the process across the corpus makes words with similar context-prediction demands develop similar input vectors.",
-          cue: "Apply this update, run an epoch, or compare the embedding space after 20 epochs.",
-          note: "Similarity is an emergent consequence of the prediction objective; no coordinate is assigned a human-readable meaning in advance."
+          explanation: `The current loss is ${format(metrics.loss)}. The table previews how gradient descent would change the vectors; this walkthrough does not apply the update.`,
+          cue: "Use “Apply 1 update” for this pair, or train the complete corpus for 20 epochs.",
+          note: "Only the training buttons change the model. “Review from Step 1” only restarts the explanation."
         }
       ];
     }
@@ -1063,7 +1016,7 @@ dogs eat meat`;
       $("#teaching-note-copy").textContent = active.note;
       $("#step-detail").innerHTML = detailForStep(state.step, metrics);
       $("#previous-step").disabled = state.step === 0;
-      $("#next-step").textContent = state.step === steps.length - 1 ? "Apply this update ▶" : "Next step ›";
+      $("#next-step").textContent = state.step === steps.length - 1 ? "Review from Step 1 ↻" : "Next step ›";
     }
 
     function renderProbabilities(metrics) {
@@ -1121,10 +1074,8 @@ dogs eat meat`;
       const latest = state.history[state.history.length - 1];
       const nearest = nearestNeighbor();
       $("#average-loss").textContent = format(averageLoss());
-      $("#pair-loss").textContent = format(metrics.loss);
       $("#context-probability").textContent = format(metrics.probabilities[metrics.contextIndex]);
       $("#nearest-word").textContent = `${nearest.word} (${format(nearest.similarity, 2)})`;
-      $("#history-body").innerHTML = state.history.slice(-8).reverse().map((point) => `<tr><td>${escapeHtml(point.label)}</td><td>${point.updates}</td><td>${format(point.averageLoss)}</td><td>${format(point.pairLoss)}</td><td>${format(point.probability)}</td></tr>`).join("");
       $("#loss-chart").setAttribute("aria-label", `Average loss at ${state.history.length} checkpoints, ending at ${format(latest.averageLoss)}`);
       renderLossChart();
     }
@@ -1142,14 +1093,13 @@ dogs eat meat`;
 
     $$(".step-button").forEach((button) => button.addEventListener("click", () => { state.step = Number(button.dataset.step); render(); }));
     $("#previous-step").addEventListener("click", () => { state.step = Math.max(0, state.step - 1); render(); });
-    $("#next-step").addEventListener("click", () => { if (state.step === 6) trainCurrentPair(); else { state.step += 1; render(); } });
+    $("#next-step").addEventListener("click", () => { state.step = state.step === 3 ? 0 : state.step + 1; render(); });
     $("#previous-pair").addEventListener("click", () => movePair(-1));
     $("#next-pair").addEventListener("click", () => movePair(1));
     $("#eta-slider").addEventListener("input", (event) => { state.eta = Number(event.currentTarget.value); render(); });
     $("#apply-corpus").addEventListener("click", () => configureCorpus(true));
     $("#window-select").addEventListener("change", () => configureCorpus(true));
     $("#run-pair").addEventListener("click", trainCurrentPair);
-    $("#run-epoch").addEventListener("click", () => trainEpochs(1));
     $("#run-twenty").addEventListener("click", () => trainEpochs(20));
     $("#reset-model").addEventListener("click", resetModel);
 
