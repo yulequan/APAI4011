@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 3: Word Embedding — Review Quiz (Set A)</title>
+<style>
+    :root {
+      color-scheme: light;
+      --ink: #102a43;
+      --muted: #5b7083;
+      --teal: #0b7285;
+      --teal-dark: #075f6f;
+      --teal-soft: #e7f6f7;
+      --line: #c7d7df;
+      --page: #f3f7f9;
+      --card: rgba(255, 255, 255, .9);
+      --green: #197046;
+      --green-soft: #eaf6ef;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --serif: Georgia, "Times New Roman", serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0 1rem 4.5rem;
+      background:
+        radial-gradient(circle at 7% 5%, rgba(34, 166, 179, .1), transparent 26rem),
+        linear-gradient(180deg, #f9fbfc 0%, var(--page) 78%);
+      color: var(--ink);
+      font-family: Aptos, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.62;
+    }
+
+    .wrap { max-width: 920px; margin: 0 auto; }
+
+    .setnav { display: flex; flex-wrap: wrap; gap: .45rem; padding: 1.7rem 0 0; }
+
+    .chip {
+      padding: .35rem .8rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--teal);
+      font-size: .8rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .chip:hover { background: var(--teal-soft); }
+
+    .chip.current { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+    header {
+      padding: 1.05rem 0 1.1rem;
+      border-bottom: 3px solid var(--teal);
+      margin-bottom: 1.3rem;
+    }
+
+    h1 {
+      margin: 0 0 .35rem;
+      font-family: var(--serif);
+      font-size: clamp(1.7rem, 4vw, 2.35rem);
+      letter-spacing: -.02em;
+      line-height: 1.15;
+    }
+
+    .sub { margin: 0; color: var(--muted); font-size: .92rem; }
+    .meta { margin: .7rem 0 0; color: var(--muted); font-size: .8rem; }
+
+    .toolbar { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1.1rem 0 1.6rem; }
+
+    .toolbar button {
+      font: inherit; font-size: .84rem; font-weight: 700;
+      padding: .48rem .85rem; border-radius: .6rem;
+      border: 1px solid var(--teal); background: #fff; color: var(--teal);
+      cursor: pointer; transition: background 160ms ease;
+    }
+
+    .toolbar button:hover { background: var(--teal-soft); }
+
+    h2 {
+      margin: 2rem 0 .9rem;
+      padding-left: .6rem;
+      border-left: 4px solid var(--teal);
+      color: var(--teal-dark);
+      font-family: var(--serif);
+      font-size: 1.35rem;
+    }
+
+    .q {
+      margin: 0 0 .85rem;
+      padding: 1rem 1.1rem;
+      border: 1px solid #bdd0da;
+      border-radius: 1rem;
+      background: var(--card);
+      box-shadow: 0 10px 30px rgba(30, 64, 85, .06);
+    }
+
+    .qhead { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem; margin-bottom: .45rem; }
+
+    .num { color: var(--teal); font-family: var(--mono); font-size: .82rem; font-weight: 800; }
+
+    .tag {
+      padding: .12rem .55rem; border: 1px solid var(--line); border-radius: 999px;
+      background: #f7fafb; color: var(--muted); font-size: .72rem; font-weight: 700;
+    }
+
+    .ref { margin-left: auto; color: #718596; font-family: var(--mono); font-size: .72rem; }
+
+    .stem { margin: 0 0 .6rem; }
+    .opts { margin: 0 0 .8rem; padding: 0; list-style: none; }
+    .opts li { padding: .15rem 0; }
+    .key { display: inline-block; min-width: 1.4rem; color: var(--muted); font-weight: 700; }
+
+    .reveal {
+      font: inherit; font-size: .82rem; font-weight: 700;
+      padding: .42rem .8rem; border: 1px solid var(--line); border-radius: .6rem;
+      background: #f8fbfc; color: var(--teal); cursor: pointer;
+    }
+
+    .reveal:hover { background: var(--teal-soft); }
+
+    .ans {
+      margin-top: .75rem; padding: .7rem .95rem;
+      border-left: 3px solid var(--green);
+      border-radius: 0 .6rem .6rem 0;
+      background: var(--green-soft);
+    }
+
+    .ans p { margin: 0 0 .4rem; }
+    .ans p:last-child { margin-bottom: 0; }
+    .akey { color: var(--green); }
+    .awhy { font-size: .95rem; }
+
+    footer {
+      margin-top: 2.4rem; padding-top: .9rem;
+      border-top: 1px solid var(--line);
+      color: #718596; font-size: .78rem;
+    }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="setnav" aria-label="Quiz sets">
+    <a class="chip current" href="./set-a.html" aria-current="page">Set A · 23 questions</a>
+    <a class="chip" href="./">Set B · 32 questions</a>
+  </nav>
+  <header>
+    <h1>Lecture 3: Word Embedding — Review Quiz (Set A)</h1>
+    <p class="sub">APAI/STAT/SDST 4011 Natural Language Processing · Lecture 3: Word Embedding</p>
+    <p class="meta">15 multiple-choice + 8 true/false questions · shorter companion set to Set B</p>
+  </header>
+
+  <div class="toolbar">
+    <button id="showAll" type="button">Show All Answers</button>
+    <button id="hideAll" type="button">Hide All Answers</button>
+  </div>
+
+  <h2>Part 1 · Multiple Choice</h2>
+    <article class="q">
+      <div class="qhead"><span class="num">Q1</span><span class="tag">Multiple Choice</span></div>
+      <p class="stem">Why are one-hot vectors not ideal representations of word meaning?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> They cannot represent all words in the vocabulary.</li>
+        <li><span class="key">B.</span> They assign similar vectors to similar words.</li>
+        <li><span class="key">C.</span> Different words are orthogonal, so similarity between words is not naturally captured.</li>
+        <li><span class="key">D.</span> Their values must be learned by gradient descent.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. Different words are orthogonal, so similarity between words is not naturally captured.</b></p>
+        <p class="awhy">One-hot vectors encode word identity, but different words are orthogonal. Thus, “hotel” and “motel” are no more similar than “hotel” and “banana” in this representation.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q2</span><span class="tag">Multiple Choice</span></div>
+      <p class="stem">Which statement best describes the distributional hypothesis?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Words with similar spellings tend to have similar meanings.</li>
+        <li><span class="key">B.</span> Words occurring in similar contexts tend to have similar meanings.</li>
+        <li><span class="key">C.</span> Frequent words always have similar meanings.</li>
+        <li><span class="key">D.</span> Words appearing in the same sentence must be synonyms.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. Words occurring in similar contexts tend to have similar meanings.</b></p>
+        <p class="awhy">The lecture summarizes the distributional hypothesis as: similar words occur in similar contexts.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q3</span><span class="tag">Multiple Choice</span></div>
+      <p class="stem">Suppose a word-word co-occurrence vector has one dimension for every word in a vocabulary of 100,000 words. What is the main problem with this representation?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> The vector has only one non-zero value.</li>
+        <li><span class="key">B.</span> The vector cannot encode context.</li>
+        <li><span class="key">C.</span> The vector is very high-dimensional and usually sparse.</li>
+        <li><span class="key">D.</span> Cosine similarity cannot be computed.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. The vector is very high-dimensional and usually sparse.</b></p>
+        <p class="awhy">Co-occurrence vectors are typically long (vocabulary-sized) and sparse, motivating shorter dense representations.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q4</span><span class="tag">Multiple Choice</span></div>
+      <p class="stem">Why is cosine similarity often preferred over the raw dot product for comparing word vectors?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Cosine similarity ignores vector magnitude and focuses on direction.</li>
+        <li><span class="key">B.</span> Cosine similarity is always positive.</li>
+        <li><span class="key">C.</span> Dot products cannot be computed for dense vectors.</li>
+        <li><span class="key">D.</span> Cosine similarity requires no multiplication.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A. Cosine similarity ignores vector magnitude and focuses on direction.</b></p>
+        <p class="awhy">Cosine similarity normalizes by vector lengths, so it focuses on how similarly the vectors are oriented rather than their raw magnitudes.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q5</span><span class="tag">Multiple Choice</span></div>
+      <p class="stem">Which statement best distinguishes dense embeddings from one-hot vectors?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Dense embeddings have exactly one non-zero dimension.</li>
+        <li><span class="key">B.</span> Dense embeddings are usually much lower-dimensional and learned from data.</li>
+        <li><span class="key">C.</span> Dense embeddings have one interpretable dimension for every word.</li>
+        <li><span class="key">D.</span> Dense embeddings cannot measure similarity.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. Dense embeddings are usually much lower-dimensional and learned from data.</b></p>
+        <p class="awhy">The lecture contrasts vocabulary-sized sparse vectors with short, dense, real-valued embeddings, often around 50–300 dimensions.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q6</span><span class="tag">Multiple Choice</span></div>
+      <p class="stem">In Skip-gram, given the sentence “problems turning into banking crises” and context window m = 2, if “into” is the center word, which training pair would NOT be generated?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> (into, problems)</li>
+        <li><span class="key">B.</span> (into, turning)</li>
+        <li><span class="key">C.</span> (into, banking)</li>
+        <li><span class="key">D.</span> (into, into)</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: D. (into, into)</b></p>
+        <p class="awhy">Skip-gram predicts context words around the center word. The center word itself is excluded from its own context.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q7</span><span class="tag">Multiple Choice</span></div>
+      <p class="stem">What is Skip-gram trained to do?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Predict the center word from its surrounding words.</li>
+        <li><span class="key">B.</span> Predict nearby context words from the center word.</li>
+        <li><span class="key">C.</span> Predict whether a sentence is positive or negative.</li>
+        <li><span class="key">D.</span> Reconstruct the original one-hot vector.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. Predict nearby context words from the center word.</b></p>
+        <p class="awhy">Skip-gram uses the center word as input and predicts words appearing in its context window.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q8</span><span class="tag">Multiple Choice</span></div>
+      <p class="stem">A Skip-gram model has vocabulary size |V| = 20,000 and embedding dimension d = 100. It maintains separate center and context vectors. How many parameters are there?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> 2,000,000</li>
+        <li><span class="key">B.</span> 4,000,000</li>
+        <li><span class="key">C.</span> 20,000</li>
+        <li><span class="key">D.</span> 40,000</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. 4,000,000</b></p>
+        <p class="awhy">There are two d-dimensional vectors for each vocabulary item: 2 × |V| × d = 2 × 20,000 × 100 = 4,000,000.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q9</span><span class="tag">Multiple Choice</span></div>
+      <p class="stem">Why does standard Skip-gram learn two vectors for each word?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> One represents syntax and the other semantics.</li>
+        <li><span class="key">B.</span> One is used when the word is a center word and the other when it is a context word.</li>
+        <li><span class="key">C.</span> One is used for training and the other only for testing.</li>
+        <li><span class="key">D.</span> One is positive and the other negative.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. One is used when the word is a center word and the other when it is a context word.</b></p>
+        <p class="awhy">Each word can appear in two roles: as a center word used to predict context, and as a context word being predicted.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q10</span><span class="tag">Multiple Choice</span></div>
+      <p class="stem">What is the main computational problem with the full-softmax Skip-gram model?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Every word requires a different embedding dimension.</li>
+        <li><span class="key">B.</span> Computing the probability of a context word requires considering all words in the vocabulary.</li>
+        <li><span class="key">C.</span> It can only process one sentence at a time.</li>
+        <li><span class="key">D.</span> It cannot use stochastic gradient descent.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. Computing the probability of a context word requires considering all words in the vocabulary.</b></p>
+        <p class="awhy">The softmax denominator sums over the entire vocabulary, which is expensive when |V| is large.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q11</span><span class="tag">Multiple Choice</span></div>
+      <p class="stem">What is the key idea of negative sampling?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Remove all low-frequency words from the corpus.</li>
+        <li><span class="key">B.</span> Replace word vectors containing negative values.</li>
+        <li><span class="key">C.</span> Turn a |V|-way prediction problem into several binary classification problems.</li>
+        <li><span class="key">D.</span> Randomly delete incorrect training examples.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. Turn a |V|-way prediction problem into several binary classification problems.</b></p>
+        <p class="awhy">SGNS learns to distinguish observed center-context pairs from a small set of sampled negative pairs instead of normalizing over the whole vocabulary.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q12</span><span class="tag">Multiple Choice</span></div>
+      <p class="stem">With K = 5 negative samples and embedding dimension d = 100, how many scalar parameters are updated for one positive (x, c) pair in SGNS?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> 500</li>
+        <li><span class="key">B.</span> 600</li>
+        <li><span class="key">C.</span> 700</li>
+        <li><span class="key">D.</span> 100,000</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. 700</b></p>
+        <p class="awhy">One center vector, one positive context vector, and K = 5 negative context vectors are updated: (K + 2)d = 7 × 100 = 700.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q13</span><span class="tag">Multiple Choice</span></div>
+      <p class="stem">Which statement about Skip-gram and CBOW is most consistent with the lecture?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> CBOW predicts context words from one center word.</li>
+        <li><span class="key">B.</span> Skip-gram is generally faster because it makes fewer predictions.</li>
+        <li><span class="key">C.</span> CBOW tends to be faster, while Skip-gram can work better for rare words.</li>
+        <li><span class="key">D.</span> They have exactly the same training task.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. CBOW tends to be faster, while Skip-gram can work better for rare words.</b></p>
+        <p class="awhy">The lecture states that CBOW is comparatively faster, while Skip-gram tends to work better for less frequent words.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q14</span><span class="tag">Multiple Choice</span></div>
+      <p class="stem">What distinguishes FastText from the basic word2vec formulation presented in the lecture?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> FastText does not use vectors.</li>
+        <li><span class="key">B.</span> FastText represents words using character n-grams.</li>
+        <li><span class="key">C.</span> FastText only works on frequent words.</li>
+        <li><span class="key">D.</span> FastText eliminates context information.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. FastText represents words using character n-grams.</b></p>
+        <p class="awhy">FastText breaks words into subword character n-grams and uses their embeddings in prediction.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q15</span><span class="tag">Multiple Choice</span></div>
+      <p class="stem">Which of the following is an extrinsic evaluation of word embeddings?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Measuring cosine similarity between “cat” and “dog”.</li>
+        <li><span class="key">B.</span> Evaluating word analogy accuracy.</li>
+        <li><span class="key">C.</span> Comparing embedding similarity with human similarity judgments.</li>
+        <li><span class="key">D.</span> Using the embeddings in a sentiment classifier and measuring classification performance.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: D. Using the embeddings in a sentiment classifier and measuring classification performance.</b></p>
+        <p class="awhy">Extrinsic evaluation plugs embeddings into a downstream NLP system and measures task performance.</p>
+      </div>
+    </article>
+
+  <h2>Part 2 · True / False</h2>
+    <article class="q">
+      <div class="qhead"><span class="num">Q1</span><span class="tag">True / False</span></div>
+      <p class="stem">Two different one-hot word vectors usually have cosine similarity 0.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">Distinct one-hot vectors are orthogonal, so their dot product and cosine similarity are 0.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q2</span><span class="tag">True / False</span></div>
+      <p class="stem">The distributional hypothesis claims that two words are similar if they frequently appear next to each other.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">The key idea is that words appearing in similar contexts tend to have similar meanings. They do not need to frequently co-occur with each other.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q3</span><span class="tag">True / False</span></div>
+      <p class="stem">Every dimension of a learned 300-dimensional word2vec embedding normally has an explicit human-interpretable meaning such as “gender” or “food”.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">The lecture explicitly notes that individual dimensions of a word embedding do not necessarily have a particular interpretation.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q4</span><span class="tag">True / False</span></div>
+      <p class="stem">In Skip-gram, the classification problem itself is the final goal.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">The prediction task is mainly a training objective; the useful product is the learned word representations.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q5</span><span class="tag">True / False</span></div>
+      <p class="stem">If the dot product u_x · v_c becomes larger, the model generally assigns a larger score to context word c for center word x.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">In the Skip-gram scoring function, a larger center-context inner product makes that context word more likely.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q6</span><span class="tag">True / False</span></div>
+      <p class="stem">Negative sampling requires computing the softmax denominator over the entire vocabulary for every training example.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">Avoiding the full-vocabulary softmax computation is one of the main motivations for negative sampling.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q7</span><span class="tag">True / False</span></div>
+      <p class="stem">CBOW and Skip-gram reverse the prediction direction: CBOW predicts a center word from context, whereas Skip-gram predicts context words from a center word.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">This is the core structural difference between the two word2vec architectures.</p>
+      </div>
+    </article>
+    <article class="q">
+      <div class="qhead"><span class="num">Q8</span><span class="tag">True / False</span></div>
+      <p class="stem">A model that performs better on intrinsic word-similarity benchmarks must necessarily perform better on every downstream NLP task.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">Intrinsic evaluation is convenient, but better intrinsic scores do not guarantee better downstream task performance.</p>
+      </div>
+    </article>
+
+  <footer>APAI4011 · self-contained review quiz · no external libraries</footer>
+</div>
+<script>
+  document.querySelectorAll('.reveal').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var box = btn.nextElementSibling;
+      var open = box.hasAttribute('hidden');
+      if (open) { box.removeAttribute('hidden'); } else { box.setAttribute('hidden', ''); }
+      btn.setAttribute('aria-expanded', String(open));
+      btn.textContent = open ? 'Hide Answer' : 'Show Answer';
+    });
+  });
+  function setAll(show) {
+    document.querySelectorAll('.q').forEach(function (q) {
+      var box = q.querySelector('.ans'), btn = q.querySelector('.reveal');
+      if (show) { box.removeAttribute('hidden'); } else { box.setAttribute('hidden', ''); }
+      btn.setAttribute('aria-expanded', String(show));
+      btn.textContent = show ? 'Hide Answer' : 'Show Answer';
+    });
+  }
+  document.getElementById('showAll').addEventListener('click', function () { setAll(true); });
+  document.getElementById('hideAll').addEventListener('click', function () { setAll(false); });
+</script>
+</body>
+</html>
