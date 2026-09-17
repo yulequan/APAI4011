@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 3: Word Embedding — Review Quiz (Set B)</title>
+<style>
+    :root {
+      color-scheme: light;
+      --ink: #102a43;
+      --muted: #5b7083;
+      --teal: #0b7285;
+      --teal-dark: #075f6f;
+      --teal-soft: #e7f6f7;
+      --line: #c7d7df;
+      --page: #f3f7f9;
+      --card: rgba(255, 255, 255, .9);
+      --green: #197046;
+      --green-soft: #eaf6ef;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --serif: Georgia, "Times New Roman", serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0 1rem 4.5rem;
+      background:
+        radial-gradient(circle at 7% 5%, rgba(34, 166, 179, .1), transparent 26rem),
+        linear-gradient(180deg, #f9fbfc 0%, var(--page) 78%);
+      color: var(--ink);
+      font-family: Aptos, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.62;
+    }
+
+    .wrap { max-width: 920px; margin: 0 auto; }
+
+    header {
+      padding: 1.9rem 0 1.1rem;
+      border-bottom: 3px solid var(--teal);
+      margin-bottom: 1.3rem;
+    }
+
+    h1 {
+      margin: 0 0 .35rem;
+      font-family: var(--serif);
+      font-size: clamp(1.7rem, 4vw, 2.35rem);
+      letter-spacing: -.02em;
+      line-height: 1.15;
+    }
+
+    .sub { margin: 0; color: var(--muted); font-size: .92rem; }
+    .meta { margin: .7rem 0 0; color: var(--muted); font-size: .8rem; }
+
+    .toolbar { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1.1rem 0 1.6rem; }
+
+    .toolbar button {
+      font: inherit; font-size: .84rem; font-weight: 700;
+      padding: .48rem .85rem; border-radius: .6rem;
+      border: 1px solid var(--teal); background: #fff; color: var(--teal);
+      cursor: pointer; transition: background 160ms ease;
+    }
+
+    .toolbar button:hover { background: var(--teal-soft); }
+
+    h2 {
+      margin: 2rem 0 .9rem;
+      padding-left: .6rem;
+      border-left: 4px solid var(--teal);
+      color: var(--teal-dark);
+      font-family: var(--serif);
+      font-size: 1.35rem;
+    }
+
+    .q {
+      margin: 0 0 .85rem;
+      padding: 1rem 1.1rem;
+      border: 1px solid #bdd0da;
+      border-radius: 1rem;
+      background: var(--card);
+      box-shadow: 0 10px 30px rgba(30, 64, 85, .06);
+    }
+
+    .qhead { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem; margin-bottom: .45rem; }
+
+    .num { color: var(--teal); font-family: var(--mono); font-size: .82rem; font-weight: 800; }
+
+    .tag {
+      padding: .12rem .55rem; border: 1px solid var(--line); border-radius: 999px;
+      background: #f7fafb; color: var(--muted); font-size: .72rem; font-weight: 700;
+    }
+
+    .ref { margin-left: auto; color: #718596; font-family: var(--mono); font-size: .72rem; }
+
+    .stem { margin: 0 0 .6rem; }
+    .opts { margin: 0 0 .8rem; padding: 0; list-style: none; }
+    .opts li { padding: .15rem 0; }
+    .key { display: inline-block; min-width: 1.4rem; color: var(--muted); font-weight: 700; }
+
+    .reveal {
+      font: inherit; font-size: .82rem; font-weight: 700;
+      padding: .42rem .8rem; border: 1px solid var(--line); border-radius: .6rem;
+      background: #f8fbfc; color: var(--teal); cursor: pointer;
+    }
+
+    .reveal:hover { background: var(--teal-soft); }
+
+    .ans {
+      margin-top: .75rem; padding: .7rem .95rem;
+      border-left: 3px solid var(--green);
+      border-radius: 0 .6rem .6rem 0;
+      background: var(--green-soft);
+    }
+
+    .ans p { margin: 0 0 .4rem; }
+    .ans p:last-child { margin-bottom: 0; }
+    .akey { color: var(--green); }
+    .awhy { font-size: .95rem; }
+
+    footer {
+      margin-top: 2.4rem; padding-top: .9rem;
+      border-top: 1px solid var(--line);
+      color: #718596; font-size: .78rem;
+    }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Lecture 3: Word Embedding — Review Quiz (Set B)</h1>
+    <p class="sub">APAI/STAT/SDST 4011 Natural Language Processing</p>
+    <p class="meta">18 multiple-choice + 14 true/false questions. Slide references use the page order of the lecture PDF.</p>
+  </header>
+
+  <div class="toolbar">
+    <button id="showAll" type="button">Show All Answers</button>
+    <button id="hideAll" type="button">Hide All Answers</button>
+  </div>
+
+  <h2>Part 1 · Multiple Choice</h2>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q1</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.10</span></div>
+      <p class="stem">Replacing word-identity (one-hot) features with word vectors mainly helps because:</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> The model no longer needs labeled training data.</li>
+        <li><span class="key">B.</span> The model can generalize to similar but unseen words at test time.</li>
+        <li><span class="key">C.</span> The model's training accuracy is guaranteed to be 100%.</li>
+        <li><span class="key">D.</span> The number of features becomes larger and therefore more expressive.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. The model can generalize to similar but unseen words at test time.</b></p>
+        <p class="awhy">With one-hot features a word must be seen in training before it can get a useful weight. With word vectors, an unseen word that is close in embedding space (e.g., “motel” near “hotel”) can still be handled.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q2</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.18</span></div>
+      <p class="stem">The lecture argues that sparse count vectors cannot capture high-order co-occurrence. Which example illustrates this problem?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> High-frequency words dominate the raw counts.</li>
+        <li><span class="key">B.</span> Count vectors contain negative values that are hard to interpret.</li>
+        <li><span class="key">C.</span> Count vectors cannot be L2-normalized.</li>
+        <li><span class="key">D.</span> w₁ co-occurs with “car” and w₂ co-occurs with “automobile”; they should be similar, but “car” and “automobile” are distinct dimensions.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: D. w₁ co-occurs with “car” and w₂ co-occurs with “automobile”; they should be similar, but “car” and “automobile” are distinct dimensions.</b></p>
+        <p class="awhy">Because “car” and “automobile” occupy two separate dimensions, w₁ and w₂ look unrelated even though they mean similar things. Dense vectors let such indirect (high-order) evidence be shared.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q3</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.19–21</span></div>
+      <p class="stem">Which of the following is a count-based approach for obtaining dense word vectors?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Applying SVD to the word–word co-occurrence matrix and keeping only the top k singular values (as in LSA).</li>
+        <li><span class="key">B.</span> Training a classifier to tell real context words from randomly sampled noise words.</li>
+        <li><span class="key">C.</span> Backpropagating through a softmax over the whole vocabulary.</li>
+        <li><span class="key">D.</span> Summing the character n-gram embeddings of each word.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A. Applying SVD to the word–word co-occurrence matrix and keeping only the top k singular values (as in LSA).</b></p>
+        <p class="awhy">Sparse word–context count matrices (e.g., PPMI) decomposed with SVD are the count-based route, an idea dating back to Latent Semantic Analysis (Deerwester et al., 1990). The other options are prediction-based.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q4</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.20–21</span></div>
+      <p class="stem">Which group lists only prediction-based word embedding methods?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> SVD, LSA, PPMI</li>
+        <li><span class="key">B.</span> TF-IDF, Naive Bayes, logistic regression</li>
+        <li><span class="key">C.</span> word2vec, GloVe, FastText</li>
+        <li><span class="key">D.</span> Skip-gram, SVD, GloVe</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. word2vec, GloVe, FastText</b></p>
+        <p class="awhy">word2vec (Mikolov et al., 2013), GloVe (Pennington et al., 2014) and FastText (Bojanowski et al., 2017) all learn vectors by formulating a prediction problem on text. SVD/LSA/PPMI belong to the count-based family.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q5</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.31, 33</span></div>
+      <p class="stem">In skip-gram with window parameter m, the context used to predict from the center word w_t consists of:</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> only the m words to the left of w_t</li>
+        <li><span class="key">B.</span> every word in the same sentence</li>
+        <li><span class="key">C.</span> the 2m words around w_t, including w_t itself</li>
+        <li><span class="key">D.</span> the 2m words inside the window (m to the left and m to the right), excluding w_t itself</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: D. the 2m words inside the window (m to the left and m to the right), excluding w_t itself</b></p>
+        <p class="awhy">The context is a fixed window of size 2m. In the objective the index runs over −m ≤ j ≤ m with j ≠ 0, so the center word is never predicted from itself.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q6</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.39</span></div>
+      <p class="stem">Which vectors are typically used as the final word embeddings for downstream use?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Only the context vectors v_w.</li>
+        <li><span class="key">B.</span> In the word2vec paper the center vectors u_w are used; the GloVe paper (Pennington et al., 2014) proposed using u_w + v_w.</li>
+        <li><span class="key">C.</span> Always u_w + v_w, because the sum is theoretically optimal.</li>
+        <li><span class="key">D.</span> Neither — the parameters are discarded once training finishes.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. In the word2vec paper the center vectors u_w are used; the GloVe paper (Pennington et al., 2014) proposed using u_w + v_w.</b></p>
+        <p class="awhy">Which set to take is an empirical question. The original word2vec paper uses the input (center) vectors u_w, which is the most common choice; GloVe proposed u_w + v_w, and Levy et al. (2015) gave an interpretation of this.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q7</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.35–36</span></div>
+      <p class="stem">Which statement about optimizing the skip-gram objective is correct?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> The objective is convex, so SGD always reaches the global optimum.</li>
+        <li><span class="key">B.</span> The optimum has a closed-form solution, so no gradient computation is needed.</li>
+        <li><span class="key">C.</span> Because u and v are learned jointly, the objective is non-convex; it is still optimized with stochastic gradient descent.</li>
+        <li><span class="key">D.</span> SGD cannot be used because the softmax is not differentiable.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. Because u and v are learned jointly, the objective is non-convex; it is still optimized with stochastic gradient descent.</b></p>
+        <p class="awhy">If u_x were fixed, the model would reduce to multinomial logistic regression (convex). Since both u and v are learned together, the joint training objective is non-convex and it is hard to find a global minimum; in practice we still run SGD: θ ← θ − η∇J(θ).</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q8</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.46–47</span></div>
+      <p class="stem">For the per-pair loss y = −log P(c | x), the gradient with respect to a context vector v_k is:</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> (P(k | x) − 1)·u_x if k = c, and P(k | x)·u_x if k ≠ c</li>
+        <li><span class="key">B.</span> P(k | x)·u_x for every k</li>
+        <li><span class="key">C.</span> (P(k | x) − 1)·u_x for every k</li>
+        <li><span class="key">D.</span> zero for every k ≠ c</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A. (P(k | x) − 1)·u_x if k = c, and P(k | x)·u_x if k ≠ c</b></p>
+        <p class="awhy">Using y = −u_x·v_c + log Σ_k exp(u_x·v_k), the derivative is −u_x for the true word and P(k | x)·u_x for the others, i.e., −u_x + P(k | x)·u_x = (P(k | x) − 1)u_x when k = c.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q9</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.52, 54</span></div>
+      <p class="stem">In skip-gram with negative sampling (SGNS), the probabilities are modeled as:</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> a softmax over the entire vocabulary</li>
+        <li><span class="key">B.</span> the cosine similarity between u_x and v_c</li>
+        <li><span class="key">C.</span> a uniform distribution over the vocabulary</li>
+        <li><span class="key">D.</span> P(y = 1 | x, c) = σ(u_x·v_c) and P(y = 0 | x, c′) = σ(−u_x·v_c′), i.e., binary logistic regression on positive and negative pairs</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: D. P(y = 1 | x, c) = σ(u_x·v_c) and P(y = 0 | x, c′) = σ(−u_x·v_c′), i.e., binary logistic regression on positive and negative pairs</b></p>
+        <p class="awhy">SGNS converts the |V|-way classification into a binary classification task: distinguish observed (center, context) pairs from noise pairs. This is the familiar binary logistic regression, but u and v are optimized together.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q10</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.51–52</span></div>
+      <p class="stem">In practice, how many negative examples does SGNS sample, and how are they drawn?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> K = 1000 negatives, drawn uniformly at random</li>
+        <li><span class="key">B.</span> K = 5–20 negatives, drawn from P(w) ∝ count(w)⁰·⁷⁵</li>
+        <li><span class="key">C.</span> K = |V| negatives, which is why it is called “negative sampling”</li>
+        <li><span class="key">D.</span> K = 2m negatives, drawn according to word length</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. K = 5–20 negatives, drawn from P(w) ∝ count(w)⁰·⁷⁵</b></p>
+        <p class="awhy">Only a small number of negatives (typically 5–20) is needed. Sampling with α = 0.75 gives rare words slightly higher probability than the plain unigram distribution and works best in practice.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q11</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.58</span></div>
+      <p class="stem">What is the key idea of GloVe?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Sample a small number of negative words for every observed pair.</li>
+        <li><span class="key">B.</span> Break each word into character n-grams before computing the score.</li>
+        <li><span class="key">C.</span> Approximate u_i·v_j directly from global co-occurrence counts X_i_j, using a weighting function that caps the importance of very frequent pairs.</li>
+        <li><span class="key">D.</span> Apply SVD to the PPMI matrix.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. Approximate u_i·v_j directly from global co-occurrence counts X_i_j, using a weighting function that caps the importance of very frequent pairs.</b></p>
+        <p class="awhy">GloVe uses the global co-occurrence statistics directly and trains faster than window-based methods while scaling to very large corpora. Option D describes the count-based route, not GloVe.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q12</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.31, 33</span></div>
+      <p class="stem">A corpus is w₁, w₂, …, w_T and skip-gram uses a window of size 2m. How many (center word, context word) training pairs does the model create at each position t?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> 2m</li>
+        <li><span class="key">B.</span> m</li>
+        <li><span class="key">C.</span> 2m + 1</li>
+        <li><span class="key">D.</span> |V|</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A. 2m</b></p>
+        <p class="awhy">At every position the model predicts the 2m words inside the window (m on each side). With m = 2 that is 4 pairs per position — for “into”: (into, problems), (into, turning), (into, banking), (into, crises).</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q13</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.59</span></div>
+      <p class="stem">The term “static word embeddings” means that:</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> the vectors are not updated during training</li>
+        <li><span class="key">B.</span> there is one fixed vector per word in the vocabulary, regardless of its context</li>
+        <li><span class="key">C.</span> the training corpus cannot be extended</li>
+        <li><span class="key">D.</span> the vocabulary is frozen after training</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. there is one fixed vector per word in the vocabulary, regardless of its context</b></p>
+        <p class="awhy">word2vec, GloVe and FastText are all static: the same vector is returned for a word type in every sentence. Contextualized embeddings, mentioned at the end of the lecture, are the alternative that changes with context.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q14</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.66</span></div>
+      <p class="stem">For the word-similarity intrinsic evaluation (e.g., WordSim-353), the standard protocol is:</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> report perplexity on held-out text</li>
+        <li><span class="key">B.</span> report classification accuracy on a downstream task</li>
+        <li><span class="key">C.</span> report the training loss of the embedding model</li>
+        <li><span class="key">D.</span> compute cosine similarity for each word pair and report the Spearman rank correlation with human judgments</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: D. compute cosine similarity for each word pair and report the Spearman rank correlation with human judgments</b></p>
+        <p class="awhy">WordSim-353 contains 353 word pairs with human similarity ratings; the model's cosine similarities are compared with those ratings using the Spearman rank correlation.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q15</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.68</span></div>
+      <p class="stem">“man : woman ≈ king : ?” tests a ____ relation, while “walked : walking ≈ swam : ?” tests a ____ relation.</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> syntactic; semantic</li>
+        <li><span class="key">B.</span> orthographic; morphological</li>
+        <li><span class="key">C.</span> semantic; syntactic</li>
+        <li><span class="key">D.</span> semantic; orthographic</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. semantic; syntactic</b></p>
+        <p class="awhy">Gender and country–capital analogies are semantic relations; verb-tense and adjective–adverb analogies are syntactic ones. Both are intrinsic evaluations on the analogy test set.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q16</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.64</span></div>
+      <p class="stem">To use word embeddings for document classification in an extrinsic evaluation, a simple approach is to:</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> sum or average the word vectors of the document and train a logistic regression classifier on the resulting vector</li>
+        <li><span class="key">B.</span> concatenate the one-hot vectors of all words in the document</li>
+        <li><span class="key">C.</span> compute the SVD of the document–term matrix</li>
+        <li><span class="key">D.</span> use the softmax over the vocabulary as the classifier</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A. sum or average the word vectors of the document and train a logistic regression classifier on the resulting vector</b></p>
+        <p class="awhy">vec(x) = e(x₁) + e(x₂) + … + e(xₙ) gives a fixed-length document vector, on which a logistic regression classifier can be trained exactly as before — replacing the bag-of-words representation.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q17</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.16, 25</span></div>
+      <p class="stem">Which statement about cosine similarity is correct?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> cos(u, v) ∈ [0, 1], and it equals 1 only for identical words.</li>
+        <li><span class="key">B.</span> cos(u, v) ∈ [−1, 1], and it ignores the magnitudes (lengths) of the vectors.</li>
+        <li><span class="key">C.</span> cos(u, v) ∈ (−∞, ∞), and a larger magnitude always means a larger similarity.</li>
+        <li><span class="key">D.</span> cos(u, v) = 1 whenever the two vectors are orthogonal.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. cos(u, v) ∈ [−1, 1], and it ignores the magnitudes (lengths) of the vectors.</b></p>
+        <p class="awhy">Cosine similarity normalizes the dot product by the two norms, so it ranges from −1 to 1 and measures only the angle — which is why it is preferred over the raw dot product for word vectors.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="mcq">
+      <div class="qhead"><span class="num">Q18</span><span class="tag">Multiple Choice</span><span class="ref">PDF p.23</span></div>
+      <p class="stem">Word embedding training takes as input a large text corpus, a predefined vocabulary V, and the embedding dimension d. What is the output?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> A probability distribution over the documents in the corpus</li>
+        <li><span class="key">B.</span> A |V| × |V| co-occurrence count matrix</li>
+        <li><span class="key">C.</span> A function f : V → ℝᵈ that maps each word to a low-dimensional real-valued vector</li>
+        <li><span class="key">D.</span> One single vector that summarizes the whole corpus</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. A function f : V → ℝᵈ that maps each word to a low-dimensional real-valued vector</b></p>
+        <p class="awhy">The learned object is a lookup from words to vectors: f : V → ℝᵈ, with d typically 50–300. The co-occurrence matrix is an ingredient of count-based methods, not the output of word2vec-style training.</p>
+      </div>
+    </article>
+
+  <h2>Part 2 · True / False</h2>
+    <article class="q" data-kind="tf">
+      <div class="qhead"><span class="num">Q1</span><span class="tag">True / False</span><span class="ref">PDF p.15, 17</span></div>
+      <p class="stem">A word–word co-occurrence count vector is short and dense, with one dimension per word in the context window.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">The opposite is true: each word is represented by its row of the word–word co-occurrence matrix, so the vector has |V| dimensions (vocabulary size) and most entries are zero — long and sparse.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="tf">
+      <div class="qhead"><span class="num">Q2</span><span class="tag">True / False</span><span class="ref">PDF p.19</span></div>
+      <p class="stem">Keeping only the top k singular values of the count matrix (SVD) is a count-based way to obtain shorter, dense vectors.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">Approximating the full matrix with its top k (e.g., 100) singular values is exactly the LSA-style count-based recipe for dense vectors.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="tf">
+      <div class="qhead"><span class="num">Q3</span><span class="tag">True / False</span><span class="ref">PDF p.35–36</span></div>
+      <p class="stem">The skip-gram objective is convex in the parameters, so SGD is guaranteed to find the global optimum.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">Learning u and v jointly makes the objective non-convex. If u_x were fixed, the problem would reduce to multinomial logistic regression, but that is not the case during training, so we can only seek a good local optimum with SGD.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="tf">
+      <div class="qhead"><span class="num">Q4</span><span class="tag">True / False</span><span class="ref">PDF p.37</span></div>
+      <p class="stem">A skip-gram model with embedding dimension d has 2d|V| parameters.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">Every word in V keeps one center vector u_w ∈ ℝᵈ and one context vector v_w ∈ ℝᵈ, giving 2d|V| parameters in total.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="tf">
+      <div class="qhead"><span class="num">Q5</span><span class="tag">True / False</span><span class="ref">PDF p.51–53</span></div>
+      <p class="stem">In SGNS, one update touches only u_x plus the (K + 1) context vectors of the positive and negative samples; all other context vectors stay unchanged at that step.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">That is exactly why negative sampling is cheap: instead of updating all |V| context vectors, only the positive context vector and the K sampled negatives are updated — (K + 2) vectors in total.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="tf">
+      <div class="qhead"><span class="num">Q6</span><span class="tag">True / False</span><span class="ref">PDF p.52</span></div>
+      <p class="stem">SGNS draws its negative words uniformly at random from the vocabulary.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">Negatives are drawn according to P(w) ∝ count(w)⁰·⁷⁵ (a smoothed unigram distribution). The exponent 0.75 gives rare words a slightly higher probability than the plain frequency distribution, which works best in practice.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="tf">
+      <div class="qhead"><span class="num">Q7</span><span class="tag">True / False</span><span class="ref">PDF p.58</span></div>
+      <p class="stem">GloVe approximates u_i·v_j directly from global co-occurrence counts and uses a weighting function that limits the influence of very frequent pairs.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">The weighting function f gives more importance to common pairs but is capped, so that extremely frequent pairs do not dominate the objective. Its advantages are faster training and scalability to very large corpora.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="tf">
+      <div class="qhead"><span class="num">Q8</span><span class="tag">True / False</span><span class="ref">PDF p.57</span></div>
+      <p class="stem">CBOW predicts the center word from the surrounding context words, which makes it a simpler task than skip-gram, and it is comparatively faster to train.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">CBOW averages the context vectors and predicts the single center word, whereas skip-gram must make 2m separate predictions per position. CBOW is therefore faster and better for frequent words; skip-gram is slower but better for rare words and smaller corpora.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="tf">
+      <div class="qhead"><span class="num">Q9</span><span class="tag">True / False</span><span class="ref">PDF p.59</span></div>
+      <p class="stem">FastText represents a word by summing the embeddings of its character n-grams (n = 3–6), including the word itself.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">For “where” the n-grams are &lt;wh, whe, her, ere, re&gt; (3-grams), &lt;whe, wher, here, ere&gt; (4-grams), etc., and the word itself; the score u_x·v_c is replaced by the sum over these sub-word embeddings.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="tf">
+      <div class="qhead"><span class="num">Q10</span><span class="tag">True / False</span><span class="ref">PDF p.59</span></div>
+      <p class="stem">With static word embeddings, the word “bank” has one single vector in all contexts.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">“Static” means one fixed vector for every word in the vocabulary, so a river bank and a financial bank share the same vector. Contextualized embeddings are the alternative that produces a different vector per occurrence.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="tf">
+      <div class="qhead"><span class="num">Q11</span><span class="tag">True / False</span><span class="ref">PDF p.63, 65</span></div>
+      <p class="stem">Extrinsic evaluation is fast to compute, but it is unclear whether it really helps downstream tasks.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">This describes intrinsic evaluation. Extrinsic evaluation plugs the embeddings into a real NLP system and measures end-to-end performance: it can take a long time but it is still the most important evaluation metric.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="tf">
+      <div class="qhead"><span class="num">Q12</span><span class="tag">True / False</span><span class="ref">PDF p.63, 68</span></div>
+      <p class="stem">Word analogy is an extrinsic evaluation method.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">Word analogy is intrinsic: it judges the vectors on a specific intermediate subtask rather than on a real application. Extrinsic evaluation means plugging the embeddings into a downstream NLP system and measuring its performance.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="tf">
+      <div class="qhead"><span class="num">Q13</span><span class="tag">True / False</span><span class="ref">PDF p.37, 40</span></div>
+      <p class="stem">The number of parameters in skip-gram depends on the length T of the training corpus.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">The parameter count is 2d|V|, which depends only on the vocabulary and the embedding dimension. The corpus length T determines how many training pairs (and gradient steps) you get, not how many parameters the model has.</p>
+      </div>
+    </article>
+    <article class="q" data-kind="tf">
+      <div class="qhead"><span class="num">Q14</span><span class="tag">True / False</span><span class="ref">PDF p.59</span></div>
+      <p class="stem">Contextualized embeddings assign different vectors to the same word in different sentences, unlike word2vec, GloVe and FastText.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">The lecture ends by flagging contextualized word embeddings as the next step: instead of one fixed vector per word type (static embeddings), the representation depends on the sentence the word appears in.</p>
+      </div>
+    </article>
+
+  <footer>Self-contained review quiz · no external libraries · suitable for GitHub Pages</footer>
+</div>
+<script>
+  document.querySelectorAll('.reveal').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var box = btn.nextElementSibling;
+      var open = box.hasAttribute('hidden');
+      if (open) { box.removeAttribute('hidden'); } else { box.setAttribute('hidden', ''); }
+      btn.setAttribute('aria-expanded', String(open));
+      btn.textContent = open ? 'Hide Answer' : 'Show Answer';
+    });
+  });
+  function setAll(show) {
+    document.querySelectorAll('.q').forEach(function (q) {
+      var box = q.querySelector('.ans'), btn = q.querySelector('.reveal');
+      if (show) { box.removeAttribute('hidden'); } else { box.setAttribute('hidden', ''); }
+      btn.setAttribute('aria-expanded', String(show));
+      btn.textContent = show ? 'Hide Answer' : 'Show Answer';
+    });
+  }
+  document.getElementById('showAll').addEventListener('click', function () { setAll(true); });
+  document.getElementById('hideAll').addEventListener('click', function () { setAll(false); });
+</script>
+</body>
+</html>

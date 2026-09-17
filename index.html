@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Interactive teaching demos for APAI4011 Natural Language Processing.">
-  <title>APAI4011 Interactive Demos</title>
+  <meta name="description" content="Interactive teaching demos and self-check quizzes for APAI4011 Natural Language Processing.">
+  <title>APAI4011 Interactive Demos &amp; Quizzes</title>
   <style>
     :root {
       color-scheme: light;
@@ -88,6 +88,10 @@
     .library {
       padding-top: 1.6rem;
       border-top: 1px solid var(--line);
+    }
+
+    .library + .library {
+      margin-top: clamp(2.4rem, 5vw, 3.75rem);
     }
 
     .section-heading {
@@ -218,7 +222,7 @@
       <div>
         <p class="eyebrow">APAI4011 · Natural Language Processing</p>
         <h1>Interactive demos</h1>
-        <p class="hero-copy">Small, focused experiments for working through the models and algorithms used in the course.</p>
+        <p class="hero-copy">Small, focused experiments for working through the models and algorithms used in the course, plus self-check quizzes for each lecture.</p>
       </div>
     </header>
 
@@ -251,6 +255,29 @@
           <div class="card-footer">
             <span>Word2Vec · Skip-gram</span>
             <span class="open">Open demo →</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section class="library" aria-labelledby="test-list-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Testing</p>
+          <h2 id="test-list-title">Check your understanding</h2>
+        </div>
+        <span class="count">1 quiz</span>
+      </div>
+
+      <div class="grid">
+        <a class="card" href="./tests/lecture-03-word-embedding/">
+          <div class="card-top"><span>01</span><span aria-hidden="true">?</span></div>
+          <p class="topic">Lecture 3 · Word embedding</p>
+          <h3>Word Embedding Review Quiz</h3>
+          <p class="description">One-hot limits, the distributional hypothesis, Skip-gram, negative sampling, GloVe, FastText, and intrinsic vs extrinsic evaluation — with explanations for every answer.</p>
+          <div class="card-footer">
+            <span>18 multiple choice · 14 true/false</span>
+            <span class="open">Open quiz →</span>
           </div>
         </a>
       </div>
