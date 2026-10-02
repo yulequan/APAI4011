@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lectures 4.2 &amp; 5.1: Language Models and RNNs — Review Quiz (Set B)</title>
+<style>
+    :root {
+      color-scheme: light;
+      --ink: #102a43;
+      --muted: #5b7083;
+      --teal: #0b7285;
+      --teal-dark: #075f6f;
+      --teal-soft: #e7f6f7;
+      --line: #c7d7df;
+      --page: #f3f7f9;
+      --card: rgba(255, 255, 255, .9);
+      --green: #197046;
+      --green-soft: #eaf6ef;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --serif: Georgia, "Times New Roman", serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0 1rem 4.5rem;
+      background:
+        radial-gradient(circle at 7% 5%, rgba(34, 166, 179, .1), transparent 26rem),
+        linear-gradient(180deg, #f9fbfc 0%, var(--page) 78%);
+      color: var(--ink);
+      font-family: Aptos, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.62;
+    }
+
+    .wrap { max-width: 920px; margin: 0 auto; }
+
+    .setnav { display: flex; flex-wrap: wrap; gap: .45rem; padding: 1.7rem 0 0; }
+
+    .chip {
+      padding: .35rem .8rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--teal);
+      font-size: .8rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .chip:hover { background: var(--teal-soft); }
+
+    .chip.current { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+    header {
+      padding: 1.05rem 0 1.1rem;
+      border-bottom: 3px solid var(--teal);
+      margin-bottom: 1.3rem;
+    }
+
+    h1 {
+      margin: 0 0 .35rem;
+      font-family: var(--serif);
+      font-size: clamp(1.7rem, 4vw, 2.35rem);
+      letter-spacing: -.02em;
+      line-height: 1.15;
+    }
+
+    .sub { margin: 0; color: var(--muted); font-size: .92rem; }
+    .meta { margin: .7rem 0 0; color: var(--muted); font-size: .8rem; }
+
+    .toolbar { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1.1rem 0 1.6rem; }
+
+    .toolbar button {
+      font: inherit; font-size: .84rem; font-weight: 700;
+      padding: .48rem .85rem; border-radius: .6rem;
+      border: 1px solid var(--teal); background: #fff; color: var(--teal);
+      cursor: pointer; transition: background 160ms ease;
+    }
+
+    .toolbar button:hover { background: var(--teal-soft); }
+
+    h2 {
+      margin: 2rem 0 .9rem;
+      padding-left: .6rem;
+      border-left: 4px solid var(--teal);
+      color: var(--teal-dark);
+      font-family: var(--serif);
+      font-size: 1.35rem;
+    }
+
+    .q {
+      margin: 0 0 .85rem;
+      padding: 1rem 1.1rem;
+      border: 1px solid #bdd0da;
+      border-radius: 1rem;
+      background: var(--card);
+      box-shadow: 0 10px 30px rgba(30, 64, 85, .06);
+    }
+
+    .qhead { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem; margin-bottom: .45rem; }
+
+    .num { color: var(--teal); font-family: var(--mono); font-size: .82rem; font-weight: 800; }
+
+    .tag {
+      padding: .12rem .55rem; border: 1px solid var(--line); border-radius: 999px;
+      background: #f7fafb; color: var(--muted); font-size: .72rem; font-weight: 700;
+    }
+
+    .ref { margin-left: auto; color: #718596; font-family: var(--mono); font-size: .72rem; }
+
+    .stem { margin: 0 0 .6rem; }
+    .opts { margin: 0 0 .8rem; padding: 0; list-style: none; }
+    .opts li { padding: .15rem 0; }
+    .key { display: inline-block; min-width: 1.4rem; color: var(--muted); font-weight: 700; }
+
+    .reveal {
+      font: inherit; font-size: .82rem; font-weight: 700;
+      padding: .42rem .8rem; border: 1px solid var(--line); border-radius: .6rem;
+      background: #f8fbfc; color: var(--teal); cursor: pointer;
+    }
+
+    .reveal:hover { background: var(--teal-soft); }
+
+    .ans {
+      margin-top: .75rem; padding: .7rem .95rem;
+      border-left: 3px solid var(--green);
+      border-radius: 0 .6rem .6rem 0;
+      background: var(--green-soft);
+    }
+
+    .ans p { margin: 0 0 .4rem; }
+    .ans p:last-child { margin-bottom: 0; }
+    .akey { color: var(--green); }
+    .awhy { font-size: .95rem; }
+
+    footer {
+      margin-top: 2.4rem; padding-top: .9rem;
+      border-top: 1px solid var(--line);
+      color: #718596; font-size: .78rem;
+    }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="setnav" aria-label="Quiz sets">
+    <a class="chip" href="./set-a.html">Set A · 30 questions</a>
+    <a class="chip current" href="./" aria-current="page">Set B · 30 questions</a>
+  </nav>
+  <header>
+    <h1>Lectures 4.2 &amp; 5.1: Language Models and RNNs — Review Quiz (Set B)</h1>
+    <p class="sub">APAI/STAT/SDST 4011 Natural Language Processing · Lecture 4.2 (LM and neural LM) · Lecture 5.1 (RNN and RNNLM)</p>
+    <p class="meta">16 multiple-choice + 4 multiple-answer + 10 true/false questions · calculation, diagnosis and design questions — harder companion set to Set A</p>
+  </header>
+
+  <div class="toolbar">
+    <button id="showAll" type="button">Show All Answers</button>
+    <button id="hideAll" type="button">Hide All Answers</button>
+  </div>
+
+  <h2>Part 1 · Multiple Choice (Analysis)</h2>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q1</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slide 26</span></div>
+      <p class="stem">Model A has perplexity 40 on a test corpus; model B has perplexity 320. Roughly how much worse is B, in bits per word?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> 1 bit</li>
+        <li><span class="key">B.</span> 3 bits</li>
+        <li><span class="key">C.</span> 8 bits</li>
+        <li><span class="key">D.</span> 280 bits</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. 3 bits</b></p>
+        <p class="awhy">Bits per word = log<sub>2</sub> of perplexity. log<sub>2</sub> 320 &minus; log<sub>2</sub> 40 = log<sub>2</sub>(320/40) = log<sub>2</sub> 8 = 3. (Model A needs about 5.3 bits/word; model B about 8.3.) Perplexity ratios become bit differences by taking log<sub>2</sub>.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q2</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slides 26&ndash;28</span></div>
+      <p class="stem">A bigram model achieves perplexity 100 on a test corpus. Which interpretation is most accurate?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> On average, the model is as uncertain as if it were choosing uniformly among about 100 words at each step.</li>
+        <li><span class="key">B.</span> The model makes a prediction error on about 1% of the words.</li>
+        <li><span class="key">C.</span> The model would need exactly 100 bits to encode each word.</li>
+        <li><span class="key">D.</span> The model assigns probability 100 to the most likely word.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A. On average, the model is as uncertain as if it were choosing uniformly among about 100 words at each step.</b></p>
+        <p class="awhy">Perplexity is the (geometric-mean) inverse probability of the corpus; ppl = 100 behaves like a &ldquo;weighted average branching factor&rdquo; of 100 — similar to the uniform model whose perplexity equals |V|. It says nothing about a 1% error rate, bits per word is log<sub>2</sub> 100 &asymp; 6.6 (not 100), and probabilities are at most 1.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q3</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slides 34, 38</span></div>
+      <p class="stem">A trigram never seen in training (&ldquo;saw a sequoia&rdquo;) has MLE probability 0. Suppose P(sequoia | a) = 0.10 for the bigram and P(sequoia) = 0.01 for the unigram, with interpolation weights &lambda;<sub>1</sub> = 0.6, &lambda;<sub>2</sub> = 0.3, &lambda;<sub>3</sub> = 0.1. What does the interpolated estimate give?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> 0 &mdash; the trigram has zero count</li>
+        <li><span class="key">B.</span> 0.100</li>
+        <li><span class="key">C.</span> 0.110</li>
+        <li><span class="key">D.</span> 0.031</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: D. 0.031</b></p>
+        <p class="awhy">0.6 &times; 0 + 0.3 &times; 0.10 + 0.1 &times; 0.01 = 0.03 + 0.001 = 0.031. This is the whole point of interpolation: even when the highest-order estimate is zero, lower-order evidence keeps the probability non-zero, so no test sentence ends up with probability zero.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q4</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slides 34, 38</span></div>
+      <p class="stem">You apply Laplace smoothing to a trigram model and evaluate on the same test corpus: &alpha; = 1 gives perplexity 240, &alpha; = 0.01 gives 180, and &alpha; = 0.0001 gives 195. What is the best interpretation?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> The results are impossible &mdash; smoothing should only improve perplexity.</li>
+        <li><span class="key">B.</span> The smallest &alpha; is always best, because it distorts the observed counts least.</li>
+        <li><span class="key">C.</span> There is a trade-off between modeling unseen n-grams and preserving reliable estimates from observed counts; &alpha; should be tuned on a development set.</li>
+        <li><span class="key">D.</span> The model should drop smoothing entirely and report the infinite perplexity.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. There is a trade-off between modeling unseen n-grams and preserving reliable estimates from observed counts; &alpha; should be tuned on a development set.</b></p>
+        <p class="awhy">Smoothing moves probability mass from observed to unobserved events. Too little &alpha; handles unseen n-grams poorly; too much &alpha; deforms the good estimates (as &alpha; &rarr; &infin; the model approaches uniform, with perplexity &asymp; |V|). The hyperparameter is tuned on held-out development data &mdash; never on the test set &mdash; exactly like the interpolation weights &lambda;.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q5</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slides 25, 31</span></div>
+      <p class="stem">A report claims &ldquo;model X has perplexity 55 and model Y has perplexity 48, so Y is better.&rdquo; Under which condition is this comparison NOT meaningful?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> X and Y are evaluated on different test corpora (or use different vocabularies).</li>
+        <li><span class="key">B.</span> X and Y are the same architecture with different n-gram orders.</li>
+        <li><span class="key">C.</span> X and Y are evaluated on the same test corpus with the same vocabulary.</li>
+        <li><span class="key">D.</span> One of X and Y is smoothed.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A. X and Y are evaluated on different test corpora (or use different vocabularies).</b></p>
+        <p class="awhy">Perplexity depends on both the model and the evaluation data: vocabulary, tokenization and domain all change the number. Comparing perplexities across different test sets or vocabularies is not meaningful &mdash; the scores must come from the same corpus and the same vocabulary. Options B&ndash;D are perfectly meaningful comparisons.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q6</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slide 48</span></div>
+      <p class="stem">The feedforward neural LM concatenates the m word embeddings into x &isin; &#8477;<sup>md</sup> rather than averaging them. What is the main reason?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Concatenation is much cheaper to compute than averaging.</li>
+        <li><span class="key">B.</span> Averaging would make the gradients vanish.</li>
+        <li><span class="key">C.</span> Averaging prevents the use of a softmax output layer.</li>
+        <li><span class="key">D.</span> Averaging would discard word-order information: &ldquo;the cat sat on&rdquo; and &ldquo;on sat cat the&rdquo; would give the same representation.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: D. Averaging would discard word-order information: &ldquo;the cat sat on&rdquo; and &ldquo;on sat cat the&rdquo; would give the same representation.</b></p>
+        <p class="awhy">Averaging is commutative, so any permutation of the same window would produce an identical input vector. Concatenation keeps each position separate (each position also maps to its own slice of W) &mdash; the lecture flags exactly this &ldquo;why concat instead of taking the average?&rdquo; point.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q7</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slides 47&ndash;49</span></div>
+      <p class="stem">A feedforward neural LM has window m = 5, embedding size d = 100, hidden size h = 200, vocabulary |V| = 10,000. Ignoring biases, how many parameters do the embedding matrix E, the input-to-hidden matrix W and the output matrix U have <i>in total</i>?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> 3.1 million</li>
+        <li><span class="key">B.</span> 1.1 million</li>
+        <li><span class="key">C.</span> 2.1 million</li>
+        <li><span class="key">D.</span> 3.0 million</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A. 3.1 million</b></p>
+        <p class="awhy">E: |V| &times; d = 10,000 &times; 100 = 1,000,000. W: h &times; 5d = 200 &times; 500 = 100,000. U: |V| &times; h = 10,000 &times; 200 = 2,000,000. Total = 3.1M. Note how the output matrix U dominates &mdash; it grows with |V|, while W grows only with the window.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q8</span><span class="tag">Multiple Choice</span><span class="ref">5.1 · slide 59</span></div>
+      <p class="stem">A simple RNNLM has |V| = 10,000 and d = h = 200. With weight tying (E and W<sub>o</sub> merged), and ignoring biases, roughly how many parameters does the model have?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> 2.04 million</li>
+        <li><span class="key">B.</span> 4.08 million</li>
+        <li><span class="key">C.</span> 2.08 million</li>
+        <li><span class="key">D.</span> 4.00 million</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. 2.08 million</b></p>
+        <p class="awhy">E: 10,000 &times; 200 = 2.00M; W: 200 &times; 200 = 40k; U: 200 &times; 200 = 40k (because d = h). W<sub>o</sub> is merged with E thanks to tying, so it adds nothing: 2.08M in total. Without tying, a separate W<sub>o</sub> &isin; &#8477;<sup>|V|&times;h</sup> would add another 2.00M, giving 4.08M &mdash; the saving is exactly the point of weight tying.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q9</span><span class="tag">Multiple Choice</span><span class="ref">5.1 · slides 18, 25</span></div>
+      <p class="stem">Suppose that for a simple RNN, each time step&rsquo;s Jacobian factor multiplies the gradient by about 0.5 on average. Approximately what factor remains after back-propagating 10 steps?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> About 0.5</li>
+        <li><span class="key">B.</span> About 10<sup>&minus;3</sup></li>
+        <li><span class="key">C.</span> About 10<sup>&minus;10</sup></li>
+        <li><span class="key">D.</span> About 0.1</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. About 10<sup>&minus;3</sup></b></p>
+        <p class="awhy">0.5<sup>10</sup> = 1/1024 &asymp; 0.001 = 10<sup>&minus;3</sup>. After 20 steps it is about 10<sup>&minus;6</sup>, and after 60 steps about 10<sup>&minus;18</sup>. This exponential decay is exactly the vanishing gradient problem; with average factors above 1 the same reasoning gives exploding gradients.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q10</span><span class="tag">Multiple Choice</span><span class="ref">5.1 · slide 30</span></div>
+      <p class="stem">A model is trained with truncated BPTT (chunk length 20). A dependency 60 steps back cannot receive gradient directly. Why might the model still capture some long-range information?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> It cannot &mdash; truncation prevents modeling long-range dependencies entirely.</li>
+        <li><span class="key">B.</span> Gradient clipping restores the missing long-range gradients.</li>
+        <li><span class="key">C.</span> The hidden state is carried forward across chunks, so information can still flow through the state over time.</li>
+        <li><span class="key">D.</span> The loss is accumulated across chunks, so gradients implicitly connect all time steps.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. The hidden state is carried forward across chunks, so information can still flow through the state over time.</b></p>
+        <p class="awhy">Truncation limits only the backward pass. The forward pass never resets: the lecture&rsquo;s description is &ldquo;carry hidden states forward in time forever, but only back-propagate for some smaller number of steps.&rdquo; Long-range information can therefore still be carried by the state, even though gradients do not reach 60 steps back.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q11</span><span class="tag">Multiple Choice</span><span class="ref">5.1 · slides 19&ndash;29</span></div>
+      <p class="stem">Two RNNLM training runs show different symptoms. Which one is the signature of <i>vanishing</i> gradients, rather than exploding gradients?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> The loss suddenly becomes NaN after a few thousand steps.</li>
+        <li><span class="key">B.</span> The loss oscillates wildly and diverges.</li>
+        <li><span class="key">C.</span> The model performs perfectly on the training set but poorly on the development set.</li>
+        <li><span class="key">D.</span> The model predicts local structure well, but keeps making agreement mistakes between words that are far apart (e.g., subject and verb).</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: D. The model predicts local structure well, but keeps making agreement mistakes between words that are far apart (e.g., subject and verb).</b></p>
+        <p class="awhy">Exploding gradients produce instability &mdash; divergence and NaN losses &mdash; and are mitigated by gradient clipping. Vanishing gradients leave training stable but make it hard for the model to use information from many steps back, which shows up precisely as errors on long-range dependencies such as subject&ndash;verb agreement (the &ldquo;writer of the books is/are&rdquo; example). Option C is ordinary overfitting.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q12</span><span class="tag">Multiple Choice</span><span class="ref">5.1 · slides 40&ndash;47</span></div>
+      <p class="stem">You need a part-of-speech tagger. You process complete sentences offline, and accuracy is the priority. Which design is best justified?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> A unidirectional (forward-only) RNN, because bidirectionality would break the causality of tagging.</li>
+        <li><span class="key">B.</span> A multi-layer bidirectional RNN, since the entire input sequence is available and bidirectionality is powerful in that case.</li>
+        <li><span class="key">C.</span> A single-layer unidirectional RNN, because extra layers only help for text generation.</li>
+        <li><span class="key">D.</span> A feedforward network with a window of 5 words, because tagging is a purely local task.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. A multi-layer bidirectional RNN, since the entire input sequence is available and bidirectionality is powerful in that case.</b></p>
+        <p class="awhy">A tag benefits from both sides of context (e.g., &ldquo;terribly&rdquo; is disambiguated by the left context &ldquo;the movie was&rdquo; and the right context &ldquo;exciting!&rdquo;). Offline processing means the whole sentence is available, and the lecture&rsquo;s advice is to use bidirectionality by default in that case &mdash; for sequence tagging especially. Stacking 2&ndash;4 layers is usually better than one. Options A and C rest on false premises, and D ignores long-range context.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q13</span><span class="tag">Multiple Choice</span><span class="ref">5.1 · slides 7&ndash;8</span></div>
+      <p class="stem">A simple RNN cell computes h<sub>t</sub> = g(W h<sub>t&minus;1</sub> + U x<sub>t</sub> + b) with hidden size h = 200 and input size d = 100. How many parameters are in one cell (W, U and b)?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> 60,200</li>
+        <li><span class="key">B.</span> 40,200</li>
+        <li><span class="key">C.</span> 40,000</li>
+        <li><span class="key">D.</span> 20,000</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A. 60,200</b></p>
+        <p class="awhy">W &isin; &#8477;<sup>h&times;h</sup>: 200 &times; 200 = 40,000. U &isin; &#8477;<sup>h&times;d</sup>: 200 &times; 100 = 20,000. b &isin; &#8477;<sup>h</sup>: 200. Total = h(h + d + 1) = 200 &times; 301 = 60,200. Crucially, this number is fixed &mdash; it does not depend on how long the input sequence is.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q14</span><span class="tag">Multiple Choice</span><span class="ref">5.1 · slides 20, 32</span></div>
+      <p class="stem">For text generation with an RNNLM, you consider always picking the most likely next word (greedy) versus sampling from the distribution. Which statement is most accurate?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Greedy decoding returns the globally most probable sentence, since every step is optimal.</li>
+        <li><span class="key">B.</span> Sampling always produces sentences with higher total probability.</li>
+        <li><span class="key">C.</span> The two methods produce identical outputs with the same model.</li>
+        <li><span class="key">D.</span> Greedy decoding is deterministic and can fall into repetitive loops; sampling gives more varied text, at the price of sometimes taking lower-probability steps.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: D. Greedy decoding is deterministic and can fall into repetitive loops; sampling gives more varied text, at the price of sometimes taking lower-probability steps.</b></p>
+        <p class="awhy">Greedy choice is locally optimal at each step, not globally: the highest-probability whole sentence may require an initially lower-probability word, and always taking the argmax readily degenerates into repeated loops. Sampling draws from the distribution &mdash; the lecture&rsquo;s generation recipe (&ldquo;sampled output is next step&rsquo;s input&rdquo;) &mdash; which increases variety but does not guarantee high-probability sentences (A, B and C are all false for these reasons).</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q15</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slides 34, 37</span></div>
+      <p class="stem">Counts from a training corpus: C(the cat) = 120 and C(the cat sat) = 18. With Laplace smoothing (&alpha; = 1) and |V| = 5,000, what is the smoothed estimate of P(sat | the cat)?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> 18 / 120 = 0.150</li>
+        <li><span class="key">B.</span> 19 / 5,120 &asymp; 0.0037</li>
+        <li><span class="key">C.</span> 19 / 120 &asymp; 0.158</li>
+        <li><span class="key">D.</span> 18 / 5,120 &asymp; 0.0035</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. 19 / 5,120 &asymp; 0.0037</b></p>
+        <p class="awhy">The smoothed MLE is (C(the cat sat) + &alpha;) / (C(the cat) + &alpha;|V|) = (18 + 1) / (120 + 5,000) = 19 / 5,120 &asymp; 0.0037. Adding &alpha; to every count changes both the numerator and the denominator &mdash; the denominator gains one &alpha; for each of the |V| possible continuations, which is why the probability shrinks so much compared with the raw ratio.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q16</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slides 24&ndash;25</span></div>
+      <p class="stem">Two language models: model A has clearly better (lower) perplexity, but model B gives higher accuracy when plugged into your downstream question-answering system. What should you conclude?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> There must be a bug &mdash; lower perplexity always means better downstream performance.</li>
+        <li><span class="key">B.</span> Perplexity is useless and should be abandoned as a metric.</li>
+        <li><span class="key">C.</span> Intrinsic scores do not always translate into downstream gains; if the task metric is what matters, prefer B &mdash; the extrinsic-evaluation perspective.</li>
+        <li><span class="key">D.</span> The two models are equally good, since the metrics disagree.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. Intrinsic scores do not always translate into downstream gains; if the task metric is what matters, prefer B &mdash; the extrinsic-evaluation perspective.</b></p>
+        <p class="awhy">Extrinsic evaluation (train LM &rarr; apply to task &rarr; observe accuracy) measures what we actually care about, at the cost of being expensive; intrinsic metrics like perplexity are convenient proxies that do not guarantee better task accuracy. &ldquo;Always&rdquo; (A) and &ldquo;useless&rdquo; (B) are both too strong, and D ignores the objective you are optimizing.</p>
+      </div>
+    </article>
+
+  <h2>Part 2 · Multiple Answers (select all that apply)</h2>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q1</span><span class="tag">Multiple Answers</span><span class="ref">4.2 · slides 25, 32, 38</span></div>
+      <p class="stem">Which of the following reduce a trigram model&rsquo;s test-set perplexity <i>without violating the evaluation protocol</i>? Select all that apply.</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Tuning the interpolation weights &lambda; directly on the test set.</li>
+        <li><span class="key">B.</span> Applying smoothing (e.g., interpolation) to the model&rsquo;s estimates.</li>
+        <li><span class="key">C.</span> Tuning the interpolation weights &lambda; on a held-out development set.</li>
+        <li><span class="key">D.</span> Collecting additional training data from the same domain.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B, C and D.</b></p>
+        <p class="awhy">Smoothing fixes zero probabilities, more in-domain data improves the estimates, and hyperparameters (&lambda;, &alpha;) belong on the development set. Tuning anything on the test set is not acceptable &mdash; the test corpus must stay unseen, exactly as with &ldquo;training on any part of test set not acceptable&rdquo;.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q2</span><span class="tag">Multiple Answers</span><span class="ref">5.1 · slides 10, 16, 59</span></div>
+      <p class="stem">Per time step, an RNNLM costs O(h &times; (d + h + |V|)). Which changes reduce that per-step cost? Select all that apply.</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Decreasing the hidden size h.</li>
+        <li><span class="key">B.</span> Increasing the vocabulary size |V|.</li>
+        <li><span class="key">C.</span> Decreasing the embedding size d.</li>
+        <li><span class="key">D.</span> Applying weight tying.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A and C.</b></p>
+        <p class="awhy">Smaller h shrinks every term, including the dominant h &times; |V| output cost; smaller d shrinks the U x<sub>t</sub> term. Weight tying reduces the <i>number of parameters</i> but not the computation &mdash; the |V|-sized output matrix and softmax still run at every step. Increasing |V| makes the dominant term worse.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q3</span><span class="tag">Multiple Answers</span><span class="ref">5.1 · slides 28&ndash;29</span></div>
+      <p class="stem">Which statements about gradient clipping are correct? Select all that apply.</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> If the gradient&rsquo;s norm exceeds a threshold, it is scaled down before the SGD update.</li>
+        <li><span class="key">B.</span> It also fixes vanishing gradients by amplifying gradients that are too small.</li>
+        <li><span class="key">C.</span> When scaling by the norm, the update direction is preserved &mdash; only the magnitude changes.</li>
+        <li><span class="key">D.</span> It helps prevent the instability (divergence, NaN losses) caused by exploding gradients.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A, C and D.</b></p>
+        <p class="awhy">Clipping caps large gradients: g &larr; g &times; (threshold / &#8214;g&#8214;), which keeps the direction and shortens the step, stabilizing training (A, C, D). It never amplifies small gradients, so it does not address vanishing gradients &mdash; those are a harder problem, motivating gated variants like LSTMs.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q4</span><span class="tag">Multiple Answers</span><span class="ref">5.1 · slides 36&ndash;47</span></div>
+      <p class="stem">Which task&ndash;architecture pairings are sensible? Select all that apply.</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Bidirectional RNN as the language model for autoregressive text generation.</li>
+        <li><span class="key">B.</span> Left-to-right (unidirectional) RNN for on-the-fly next-word prediction as a user types.</li>
+        <li><span class="key">C.</span> Multi-layer bidirectional RNN for sentence-level sentiment classification.</li>
+        <li><span class="key">D.</span> Single-layer unidirectional RNN for offline part-of-speech tagging, chosen because it gives the best accuracy.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B and C.</b></p>
+        <p class="awhy">B: prediction must be causal &mdash; no future tokens exist yet, so left-to-right fits. C: the whole sentence is available, and pooling or concatenating the two directions is common practice (the key idea behind BERT). A: generation cannot see the future, so bidirectionality is invalid there. D: offline tagging <i>can</i> see the whole sentence, so a bidirectional tagger is available and typically more accurate &mdash; the stated rationale fails.</p>
+      </div>
+    </article>
+
+  <h2>Part 3 · True / False (Reasoning)</h2>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q1</span><span class="tag">True / False</span><span class="ref">4.2 · slide 26</span></div>
+      <p class="stem">If a model assigns the same probability p to every gold word of a corpus, its perplexity is 1/p, regardless of the corpus length.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">ppl = P(corpus)<sup>&minus;1/n</sup> = (p<sup>n</sup>)<sup>&minus;1/n</sup> = 1/p &mdash; the length n cancels out. This is why perplexity is a per-word measure and why the uniform model (p = 1/|V|) has perplexity exactly |V|.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q2</span><span class="tag">True / False</span><span class="ref">4.2 · slides 25&ndash;26</span></div>
+      <p class="stem">If model A has lower perplexity than model B on the same test corpus, then A assigns a higher probability to <i>every individual sentence</i> of that corpus.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">Perplexity is an aggregate (geometric-mean) measure over the whole corpus. A is better <i>on average</i>, but on any particular sentence B may assign the higher probability &mdash; the two models can trade off, and a lower average does not imply pointwise dominance.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q3</span><span class="tag">True / False</span><span class="ref">4.2 · slide 31</span></div>
+      <p class="stem">A trigram model with no smoothing can have infinite (undefined) perplexity on a test corpus even if the vast majority of its trigram estimates are perfectly reasonable.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">Perplexity is built from P(corpus) = product over positions; a single zero-probability n-gram makes the whole product zero, hence undefined (infinite) perplexity &mdash; the sparsity problem that motivates smoothing. One bad estimate is enough.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q4</span><span class="tag">True / False</span><span class="ref">4.2 · slides 48&ndash;50</span></div>
+      <p class="stem">In a feedforward neural LM, increasing the window from m = 5 to m = 10 (with d, h and |V| fixed) has no effect on the number of parameters.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">W &isin; &#8477;<sup>h &times; m&middot;d</sup> grows in proportion to m, so the parameter count increases (roughly doubling here). This is precisely the limitation that &ldquo;W scales linearly with the context size m&rdquo; &mdash; and one reason recurrent architectures are attractive.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q5</span><span class="tag">True / False</span><span class="ref">5.1 · slides 28&ndash;29</span></div>
+      <p class="stem">Gradient clipping can also alleviate the vanishing gradient problem, because it rescales gradients that are too small.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">Clipping only shrinks gradients whose norm is <i>too large</i>; it never amplifies small ones. Vanishing gradients are the harder problem, and the lecture points to advanced RNN variants (LSTMs, GRUs) instead &mdash; clipping is the standard remedy for exploding gradients (which produces the largest gradient norms).</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q6</span><span class="tag">True / False</span><span class="ref">5.1 · slides 7&ndash;8, 13</span></div>
+      <p class="stem">Because an RNN reuses the same weights at every step, both its parameter count and the compute needed for one forward pass are independent of the sequence length.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">The first half is true &mdash; the parameter count is independent of length, which is a genuine advantage of RNNs (&ldquo;model size doesn&rsquo;t increase for longer input context&rdquo;). But compute is not: a forward pass touches n time steps, costing O(n &times; h &times; (d + h + |V|)), growing linearly with the input length.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q7</span><span class="tag">True / False</span><span class="ref">5.1 · slide 59</span></div>
+      <p class="stem">Weight tying (merging E and W<sub>o</sub> when d = h) reduces the number of parameters but does not remove the |V|-sized softmax computation at each step.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">Tying shares the <i>values</i> of the matrices (saving |V| &times; h parameters), but the model still computes z = W<sub>o</sub> h<sub>t</sub> over all |V| words and normalizes with a softmax at every step. Parameter savings and compute savings are different things.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q8</span><span class="tag">True / False</span><span class="ref">5.1 · slide 30</span></div>
+      <p class="stem">In truncated BPTT, the hidden state arriving at a chunk boundary is treated as a constant during the backward pass &mdash; no gradient flows across the boundary.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">Truncated BPTT runs forward and backward per chunk: the carried-in state acts as a fixed initial state for that chunk&rsquo;s backward pass, and only within-chunk steps receive gradient. Information still flows <i>forward</i> through the state across chunks &mdash; it is the backward gradient connection that is cut.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q9</span><span class="tag">True / False</span><span class="ref">4.2 · slide 26</span></div>
+      <p class="stem">Perplexity 1 on a test corpus means the model assigned probability 1 to every gold word of that corpus.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">ppl = P(corpus)<sup>&minus;1/n</sup> = 1 requires P(corpus) = 1, i.e., every factor equals 1 (probabilities never exceed 1). It is the unattainable lower bound &mdash; perfect certainty at every step &mdash; which no real LM on natural text reaches.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q10</span><span class="tag">True / False</span><span class="ref">4.2 · slides 32&ndash;34</span></div>
+      <p class="stem">Any smoothing method, with any hyperparameter setting, will lower perplexity relative to the unsmoothed maximum-likelihood model.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">Over-smoothing moves too much mass to unseen events and damages reliable estimates: as &alpha; &rarr; &infin; the model drifts toward uniform and perplexity approaches |V|. Even moderate smoothing can hurt a test set that contains no unseen events. Smoothing trades bias for coverage, which is exactly why &alpha; and &lambda; must be tuned on development data.</p>
+      </div>
+    </article>
+
+  <footer>APAI4011 · self-contained review quiz · no external libraries</footer>
+</div>
+<script>
+  document.querySelectorAll('.reveal').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var box = btn.nextElementSibling;
+      var open = box.hasAttribute('hidden');
+      if (open) { box.removeAttribute('hidden'); } else { box.setAttribute('hidden', ''); }
+      btn.setAttribute('aria-expanded', String(open));
+      btn.textContent = open ? 'Hide Answer' : 'Show Answer';
+    });
+  });
+  function setAll(show) {
+    document.querySelectorAll('.q').forEach(function (q) {
+      var box = q.querySelector('.ans'), btn = q.querySelector('.reveal');
+      if (show) { box.removeAttribute('hidden'); } else { box.setAttribute('hidden', ''); }
+      btn.setAttribute('aria-expanded', String(show));
+      btn.textContent = show ? 'Hide Answer' : 'Show Answer';
+    });
+  }
+  document.getElementById('showAll').addEventListener('click', function () { setAll(true); });
+  document.getElementById('hideAll').addEventListener('click', function () { setAll(false); });
+</script>
+</body>
+</html>

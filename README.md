@@ -9,6 +9,8 @@ Small, self-contained teaching demos and self-check quizzes for APAI4011 Natural
 - [Word2Vec: From Context to Embeddings](https://yulequan.github.io/APAI4011/demos/word2vec-context-prediction/)
 - [Lecture 3 quiz: Word Embedding, Set B](https://yulequan.github.io/APAI4011/tests/lecture-03-word-embedding/)
 - [Lecture 3 quiz: Word Embedding, Set A](https://yulequan.github.io/APAI4011/tests/lecture-03-word-embedding/set-a.html)
+- [Lectures 4.2 & 5.1 quiz: Language Models and RNNs, Set B](https://yulequan.github.io/APAI4011/tests/lecture-04-05-lm-and-rnn/)
+- [Lectures 4.2 & 5.1 quiz: Language Models and RNNs, Set A](https://yulequan.github.io/APAI4011/tests/lecture-04-05-lm-and-rnn/set-a.html)
 
 ## Structure
 
@@ -21,6 +23,9 @@ demos/
     index.html
 tests/
   lecture-03-word-embedding/
+    index.html
+    set-a.html
+  lecture-04-05-lm-and-rnn/
     index.html
     set-a.html
 ```

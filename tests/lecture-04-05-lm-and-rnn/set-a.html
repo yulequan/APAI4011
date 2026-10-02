@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lectures 4.2 &amp; 5.1: Language Models and RNNs — Review Quiz (Set A)</title>
+<style>
+    :root {
+      color-scheme: light;
+      --ink: #102a43;
+      --muted: #5b7083;
+      --teal: #0b7285;
+      --teal-dark: #075f6f;
+      --teal-soft: #e7f6f7;
+      --line: #c7d7df;
+      --page: #f3f7f9;
+      --card: rgba(255, 255, 255, .9);
+      --green: #197046;
+      --green-soft: #eaf6ef;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --serif: Georgia, "Times New Roman", serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0 1rem 4.5rem;
+      background:
+        radial-gradient(circle at 7% 5%, rgba(34, 166, 179, .1), transparent 26rem),
+        linear-gradient(180deg, #f9fbfc 0%, var(--page) 78%);
+      color: var(--ink);
+      font-family: Aptos, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.62;
+    }
+
+    .wrap { max-width: 920px; margin: 0 auto; }
+
+    .setnav { display: flex; flex-wrap: wrap; gap: .45rem; padding: 1.7rem 0 0; }
+
+    .chip {
+      padding: .35rem .8rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--teal);
+      font-size: .8rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .chip:hover { background: var(--teal-soft); }
+
+    .chip.current { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+    header {
+      padding: 1.05rem 0 1.1rem;
+      border-bottom: 3px solid var(--teal);
+      margin-bottom: 1.3rem;
+    }
+
+    h1 {
+      margin: 0 0 .35rem;
+      font-family: var(--serif);
+      font-size: clamp(1.7rem, 4vw, 2.35rem);
+      letter-spacing: -.02em;
+      line-height: 1.15;
+    }
+
+    .sub { margin: 0; color: var(--muted); font-size: .92rem; }
+    .meta { margin: .7rem 0 0; color: var(--muted); font-size: .8rem; }
+
+    .toolbar { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1.1rem 0 1.6rem; }
+
+    .toolbar button {
+      font: inherit; font-size: .84rem; font-weight: 700;
+      padding: .48rem .85rem; border-radius: .6rem;
+      border: 1px solid var(--teal); background: #fff; color: var(--teal);
+      cursor: pointer; transition: background 160ms ease;
+    }
+
+    .toolbar button:hover { background: var(--teal-soft); }
+
+    h2 {
+      margin: 2rem 0 .9rem;
+      padding-left: .6rem;
+      border-left: 4px solid var(--teal);
+      color: var(--teal-dark);
+      font-family: var(--serif);
+      font-size: 1.35rem;
+    }
+
+    .q {
+      margin: 0 0 .85rem;
+      padding: 1rem 1.1rem;
+      border: 1px solid #bdd0da;
+      border-radius: 1rem;
+      background: var(--card);
+      box-shadow: 0 10px 30px rgba(30, 64, 85, .06);
+    }
+
+    .qhead { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem; margin-bottom: .45rem; }
+
+    .num { color: var(--teal); font-family: var(--mono); font-size: .82rem; font-weight: 800; }
+
+    .tag {
+      padding: .12rem .55rem; border: 1px solid var(--line); border-radius: 999px;
+      background: #f7fafb; color: var(--muted); font-size: .72rem; font-weight: 700;
+    }
+
+    .ref { margin-left: auto; color: #718596; font-family: var(--mono); font-size: .72rem; }
+
+    .stem { margin: 0 0 .6rem; }
+    .opts { margin: 0 0 .8rem; padding: 0; list-style: none; }
+    .opts li { padding: .15rem 0; }
+    .key { display: inline-block; min-width: 1.4rem; color: var(--muted); font-weight: 700; }
+
+    .reveal {
+      font: inherit; font-size: .82rem; font-weight: 700;
+      padding: .42rem .8rem; border: 1px solid var(--line); border-radius: .6rem;
+      background: #f8fbfc; color: var(--teal); cursor: pointer;
+    }
+
+    .reveal:hover { background: var(--teal-soft); }
+
+    .ans {
+      margin-top: .75rem; padding: .7rem .95rem;
+      border-left: 3px solid var(--green);
+      border-radius: 0 .6rem .6rem 0;
+      background: var(--green-soft);
+    }
+
+    .ans p { margin: 0 0 .4rem; }
+    .ans p:last-child { margin-bottom: 0; }
+    .akey { color: var(--green); }
+    .awhy { font-size: .95rem; }
+
+    footer {
+      margin-top: 2.4rem; padding-top: .9rem;
+      border-top: 1px solid var(--line);
+      color: #718596; font-size: .78rem;
+    }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="setnav" aria-label="Quiz sets">
+    <a class="chip current" href="./set-a.html" aria-current="page">Set A · 30 questions</a>
+    <a class="chip" href="./">Set B · 30 questions</a>
+  </nav>
+  <header>
+    <h1>Lectures 4.2 &amp; 5.1: Language Models and RNNs — Review Quiz (Set A)</h1>
+    <p class="sub">APAI/STAT/SDST 4011 Natural Language Processing · Lecture 4.2 (LM and neural LM) · Lecture 5.1 (RNN and RNNLM)</p>
+    <p class="meta">17 multiple-choice + 4 multiple-answer + 9 true/false questions · core review companion set to the harder Set B · references follow the page order of the two lecture PDFs</p>
+  </header>
+
+  <div class="toolbar">
+    <button id="showAll" type="button">Show All Answers</button>
+    <button id="hideAll" type="button">Hide All Answers</button>
+  </div>
+
+  <h2>Part 1 · Multiple Choice</h2>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q1</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slide 8</span></div>
+      <p class="stem">A language model is best described as:</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> A probabilistic model that assigns a probability to word sequences, and can therefore predict the next word.</li>
+        <li><span class="key">B.</span> A set of grammar rules that decides whether a sentence is grammatical.</li>
+        <li><span class="key">C.</span> A classifier that assigns a topic label to each document.</li>
+        <li><span class="key">D.</span> A dictionary that stores the meaning of every word.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A. A probabilistic model that assigns a probability to word sequences, and can therefore predict the next word.</b></p>
+        <p class="awhy">A language model is a probabilistic model of a sequence of words: it defines the joint probability P(w<sub>1</sub>, …, w<sub>n</sub>) via the chain rule, so it can score how likely a phrase/sentence is, and it can complete a context by predicting the next word (e.g., &ldquo;the cat sat on the ___&rdquo;).</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q2</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slides 8–9</span></div>
+      <p class="stem">Using the chain rule of probability, which factorization of P(the cat sat on the mat) is exact (i.e., makes no independence assumption)?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> P(the) · P(cat) · P(sat) · P(on) · P(the) · P(mat)</li>
+        <li><span class="key">B.</span> P(the) · P(cat | the) · P(sat | the cat) · P(on | the cat sat) · P(the | the cat sat on) · P(mat | the cat sat on the)</li>
+        <li><span class="key">C.</span> P(the) · P(cat | the) · P(sat | cat) · P(on | sat) · P(the | on) · P(mat | the)</li>
+        <li><span class="key">D.</span> P(the) · P(cat | the) · P(sat | the cat) · P(on | the cat sat) · P(the | on) · P(mat | the)</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. P(the) · P(cat | the) · P(sat | the cat) · P(on | the cat sat) · P(the | the cat sat on) · P(mat | the cat sat on the)</b></p>
+        <p class="awhy">The chain rule expresses the joint probability as a product of conditional probabilities, where each word is conditioned on <i>all</i> preceding words. Option A assumes independence, option C conditions only on the immediately previous word (a bigram-style approximation), and option D uses inconsistent histories.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q3</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slides 13–14</span></div>
+      <p class="stem">With a vocabulary of 40,000 words, roughly how many distinct word sequences of length 10 are possible?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> 4 × 10<sup>5</sup></li>
+        <li><span class="key">B.</span> 10<sup>10</sup></li>
+        <li><span class="key">C.</span> 10<sup>46</sup></li>
+        <li><span class="key">D.</span> 10<sup>63</sup></li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. 10<sup>46</sup></b></p>
+        <p class="awhy">Each of the 10 positions can be any of the 40,000 words, so there are 40,000<sup>10</sup> = (4 × 10<sup>4</sup>)<sup>10</sup> ≈ 10<sup>46</sup> possible sequences. This exponential blow-up is why we cannot count all sequences directly and instead use Markov / n-gram approximations.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q4</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slide 13</span></div>
+      <p class="stem">A trigram model has the counts C(the cat) = 200, C(the cat sat) = 50, C(the cat sat on) = 20. Under the maximum likelihood estimate, what is P(sat | the cat)?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> 20 / 50 = 0.4</li>
+        <li><span class="key">B.</span> 200 / 50 = 4.0</li>
+        <li><span class="key">C.</span> 50 / 20 = 2.5</li>
+        <li><span class="key">D.</span> 50 / 200 = 0.25</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: D. 50 / 200 = 0.25</b></p>
+        <p class="awhy">For a trigram, P(sat | the cat) = C(the cat sat) / C(the cat) = 50 / 200 = 0.25. The ratio 20 / 50 = 0.4 would be P(on | the cat sat), and raw counts are not probabilities.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q5</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slide 15</span></div>
+      <p class="stem">What trade-off does the Markov assumption make, according to the lecture?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> It increases the number of parameters to estimate, but captures longer context.</li>
+        <li><span class="key">B.</span> It makes the model non-probabilistic.</li>
+        <li><span class="key">C.</span> It reduces the number of parameters to estimate, at the cost of modeling capacity.</li>
+        <li><span class="key">D.</span> It removes the need for a training corpus.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. It reduces the number of parameters to estimate, at the cost of modeling capacity.</b></p>
+        <p class="awhy">The lecture states: use only the recent past to predict the next word (e.g., P(mat | the cat sat on the) ≈ P(mat | on the)); this reduces the number of estimated parameters in exchange for modeling capacity.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q6</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slide 34</span></div>
+      <p class="stem">In add-&alpha; (Laplace) smoothing for a bigram model, which formula is correct?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> P(w<sub>i</sub> | w<sub>i&minus;1</sub>) = (C(w<sub>i&minus;1</sub>, w<sub>i</sub>) + &alpha;) / (C(w<sub>i&minus;1</sub>) + &alpha;|V|)</li>
+        <li><span class="key">B.</span> P(w<sub>i</sub> | w<sub>i&minus;1</sub>) = C(w<sub>i&minus;1</sub>, w<sub>i</sub>) / C(w<sub>i&minus;1</sub>)</li>
+        <li><span class="key">C.</span> P(w<sub>i</sub> | w<sub>i&minus;1</sub>) = (C(w<sub>i&minus;1</sub>, w<sub>i</sub>) + &alpha;) / (C(w<sub>i&minus;1</sub>) + &alpha;)</li>
+        <li><span class="key">D.</span> P(w<sub>i</sub> | w<sub>i&minus;1</sub>) = C(w<sub>i&minus;1</sub>, w<sub>i</sub>) + &alpha;</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A. P(w<sub>i</sub> | w<sub>i&minus;1</sub>) = (C(w<sub>i&minus;1</sub>, w<sub>i</sub>) + &alpha;) / (C(w<sub>i&minus;1</sub>) + &alpha;|V|)</b></p>
+        <p class="awhy">Add &alpha; to every bigram count and renormalize: the denominator gains &alpha;|V| because &alpha; is added to each of the |V| possible next-word counts. Option B is the raw MLE, option C does not renormalize correctly, and option D is not even a probability.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q7</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slide 38</span></div>
+      <p class="stem">A model interpolates: P(w<sub>i</sub> | w<sub>i&minus;2</sub> w<sub>i&minus;1</sub>) = &lambda;<sub>1</sub> · P(w<sub>i</sub> | w<sub>i&minus;2</sub> w<sub>i&minus;1</sub>) + &lambda;<sub>2</sub> · P(w<sub>i</sub> | w<sub>i&minus;1</sub>) + &lambda;<sub>3</sub> · P(w<sub>i</sub>). How are &lambda;<sub>1</sub>, &lambda;<sub>2</sub>, &lambda;<sub>3</sub> typically chosen in the recipe from the lecture?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Fixed to 1/3 each and never changed.</li>
+        <li><span class="key">B.</span> Chosen so that every n-gram probability is at most 1.</li>
+        <li><span class="key">C.</span> Counted directly from the test corpus.</li>
+        <li><span class="key">D.</span> Estimated on a held-out development (validation) set to maximize the probability of held-out data.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: D. Estimated on a held-out development (validation) set to maximize the probability of held-out data.</b></p>
+        <p class="awhy">The recipe: first estimate the n-gram probabilities on the training set, then fit the &lambda; hyperparameters on a held-out development set, and finally evaluate the chosen model on the test set. The test set is never used for tuning.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q8</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slides 27–28</span></div>
+      <p class="stem">A k-gram model assigns probability 1/|V| to every word at every step (the model is &ldquo;fine&rdquo; with observing any word). What is its perplexity on a test corpus?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> 1</li>
+        <li><span class="key">B.</span> |V|</li>
+        <li><span class="key">C.</span> |V|<sup>2</sup></li>
+        <li><span class="key">D.</span> 2<sup>|V|</sup></li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. |V|</b></p>
+        <p class="awhy">ppl = 2<sup>&minus;(1/n) &Sigma; log<sub>2</sub>(1/|V|)</sup> = 2<sup>log<sub>2</sub>|V|</sup> = |V|. When the model is equally uncertain about all |V| words at every step, its perplexity equals the vocabulary size — a very weak model.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q9</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slide 26</span></div>
+      <p class="stem">On a test corpus of 4 words, a bigram model assigns probability 0.5 to each gold word. What is its perplexity?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> 0.5</li>
+        <li><span class="key">B.</span> 1</li>
+        <li><span class="key">C.</span> 2</li>
+        <li><span class="key">D.</span> 16</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. 2</b></p>
+        <p class="awhy">x = &minus;(1/4) &times; (4 &times; log<sub>2</sub> 0.5) = 1, so ppl = 2<sup>x</sup> = 2. Intuitively, at each step the model is as uncertain as flipping a fair coin between two words.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q10</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slide 46</span></div>
+      <p class="stem">The training data contains &ldquo;I have to make sure that the cat gets fed&rdquo;, but never &ldquo;dog gets fed&rdquo;. At test time the model must fill in &ldquo;I forgot to make sure that the dog gets ___&rdquo;. Why can a neural LM predict &ldquo;fed&rdquo; while an n-gram LM cannot?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> The neural LM has memorized the training sentence.</li>
+        <li><span class="key">B.</span> The neural LM uses a much larger vocabulary.</li>
+        <li><span class="key">C.</span> The neural LM backs off to unigram probabilities.</li>
+        <li><span class="key">D.</span> The neural LM uses word embeddings: since e(cat) &asymp; e(dog), similar contexts produce similar predictions.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: D. The neural LM uses word embeddings: since e(cat) &asymp; e(dog), similar contexts produce similar predictions.</b></p>
+        <p class="awhy">The n-gram model has never seen &ldquo;dog gets fed&rdquo;, so its count is zero. The neural LM exploits the embedding similarity of &ldquo;cat&rdquo; and &ldquo;dog&rdquo; to generalize: the test context is close to the training context in embedding space, so it can predict &ldquo;fed&rdquo;.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q11</span><span class="tag">Multiple Choice</span><span class="ref">4.2 · slide 49</span></div>
+      <p class="stem">A feedforward neural LM uses window m = 5, embedding size d, hidden size h: x = [e(the); e(cat); e(sat); e(on); e(the)], h = tanh(Wx + b), z = Uh. What are the dimensions of W and U?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> W &isin; &#8477;<sup>h&times;5d</sup>, U &isin; &#8477;<sup>|V|&times;h</sup></li>
+        <li><span class="key">B.</span> W &isin; &#8477;<sup>h&times;d</sup>, U &isin; &#8477;<sup>|V|&times;h</sup></li>
+        <li><span class="key">C.</span> W &isin; &#8477;<sup>h&times;5d</sup>, U &isin; &#8477;<sup>|V|&times;d</sup></li>
+        <li><span class="key">D.</span> W &isin; &#8477;<sup>h&times;d</sup>, U &isin; &#8477;<sup>d&times;h</sup></li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A. W &isin; &#8477;<sup>h&times;5d</sup>, U &isin; &#8477;<sup>|V|&times;h</sup></b></p>
+        <p class="awhy">The input concatenates m = 5 embeddings, so x &isin; &#8477;<sup>5d</sup> and W &isin; &#8477;<sup>h&times;5d</sup>. The output layer produces one score per vocabulary word, so z = Uh &isin; &#8477;<sup>|V|</sup> and U &isin; &#8477;<sup>|V|&times;h</sup>.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q12</span><span class="tag">Multiple Choice</span><span class="ref">5.1 · slides 4, 7–8</span></div>
+      <p class="stem">What is the core idea of a recurrent neural network (RNN)?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Use a different weight matrix at every time step.</li>
+        <li><span class="key">B.</span> Apply the same weights repeatedly across time steps, passing a hidden state from step to step.</li>
+        <li><span class="key">C.</span> Average the embeddings of all words in the sentence.</li>
+        <li><span class="key">D.</span> Slide a fixed-size window over the sentence, like a feedforward neural LM.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. Apply the same weights repeatedly across time steps, passing a hidden state from step to step.</b></p>
+        <p class="awhy">RNNs handle variable-length inputs by applying the same weights (W, U, b) at every position: h<sub>t</sub> = g(W h<sub>t&minus;1</sub> + U x<sub>t</sub> + b), so the hidden state carries information from the past forward.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q13</span><span class="tag">Multiple Choice</span><span class="ref">5.1 · slide 32</span></div>
+      <p class="stem">After training an RNN language model, how does one generate text?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Extract the most frequent sentences from the training corpus.</li>
+        <li><span class="key">B.</span> Run the network backwards from the end of the sentence.</li>
+        <li><span class="key">C.</span> Rank candidate sentences with n-gram counts.</li>
+        <li><span class="key">D.</span> Sample a word from the predicted distribution, then feed the sampled word back as the next step&rsquo;s input.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: D. Sample a word from the predicted distribution, then feed the sampled word back as the next step&rsquo;s input.</b></p>
+        <p class="awhy">The lecture: &ldquo;You can generate text by repeated sampling. Sampled output is next step&rsquo;s input.&rdquo; The model predicts a distribution over the next word, you pick one (by sampling or by taking the most likely word), and append it to the context.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q14</span><span class="tag">Multiple Choice</span><span class="ref">5.1 · slide 10</span></div>
+      <p class="stem">Why does the RNNLM not rely on the Markov assumption?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> It uses counts instead of probabilities.</li>
+        <li><span class="key">B.</span> It does not use the chain rule of probability.</li>
+        <li><span class="key">C.</span> The hidden state h<sub>t</sub> can (in principle) contain information about all previous words, so no fixed-length context cutoff is needed.</li>
+        <li><span class="key">D.</span> It conditions only on the immediately previous word.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. The hidden state h<sub>t</sub> can (in principle) contain information about all previous words, so no fixed-length context cutoff is needed.</b></p>
+        <p class="awhy">An RNNLM factorizes P(w<sub>1</sub>, …, w<sub>n</sub>) = &prod;<sub>t</sub> P(w<sub>t</sub> | w<sub>1</sub> … w<sub>t&minus;1</sub>) through hidden states — &ldquo;No Markov assumption here! Assume hidden states contain all information from the past.&rdquo; Note that n-gram models also use the chain rule, but with a Markov truncation.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q15</span><span class="tag">Multiple Choice</span><span class="ref">5.1 · slide 16</span></div>
+      <p class="stem">An RNNLM has hidden size h, embedding size d and vocabulary size |V|. What is the running time of a forward pass over a sequence of length n?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> O(h &times; (d + h + |V|))</li>
+        <li><span class="key">B.</span> O(n &times; h &times; (d + h + |V|))</li>
+        <li><span class="key">C.</span> O(n &times; (d + h + |V|))</li>
+        <li><span class="key">D.</span> O(n &times; h &times; (d + h))</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B. O(n &times; h &times; (d + h + |V|))</b></p>
+        <p class="awhy">Each time step costs O(h(d + h + |V|)): the recurrent update involves W &isin; &#8477;<sup>h&times;h</sup> and U &isin; &#8477;<sup>h&times;d</sup>, and the output layer uses W<sub>o</sub> &isin; &#8477;<sup>|V|&times;h</sup>. Over n steps this gives O(n &times; h &times; (d + h + |V|)).</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q16</span><span class="tag">Multiple Choice</span><span class="ref">5.1 · slides 18, 25</span></div>
+      <p class="stem">In backpropagation through time (BPTT), if time steps k and t are far apart, the gradient &part;L<sub>t</sub> / &part;h<sub>k</sub>:</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Can grow or shrink exponentially with the distance &mdash; the gradient exploding / vanishing problem.</li>
+        <li><span class="key">B.</span> Is exactly zero.</li>
+        <li><span class="key">C.</span> Becomes a constant independent of the distance.</li>
+        <li><span class="key">D.</span> Is always smaller than 1.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A. Can grow or shrink exponentially with the distance &mdash; the gradient exploding / vanishing problem.</b></p>
+        <p class="awhy">The gradient is a product of many Jacobian factors; when k and t are far apart, the gradients are very easy to grow or shrink exponentially &mdash; this is exactly the gradient exploding / vanishing problem that motivates gradient clipping and LSTM/GRU variants.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q17</span><span class="tag">Multiple Choice</span><span class="ref">5.1 · slide 59</span></div>
+      <p class="stem">In an RNNLM, E &isin; &#8477;<sup>|V|&times;d</sup> holds the input word embeddings and W<sub>o</sub> &isin; &#8477;<sup>|V|&times;h</sup> is the output matrix. What does &ldquo;weight tying&rdquo; refer to?</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Sharing W, U, b across time steps (this is only possible when d = h).</li>
+        <li><span class="key">B.</span> Freezing the embedding matrix during training.</li>
+        <li><span class="key">C.</span> Merging E and W<sub>o</sub> into a single shared matrix when d = h; it works better empirically and is common practice.</li>
+        <li><span class="key">D.</span> Sharing the hidden state between a forward and a backward RNN.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: C. Merging E and W<sub>o</sub> into a single shared matrix when d = h; it works better empirically and is common practice.</b></p>
+        <p class="awhy">Slide 59: if d = h, we can just merge E and W<sub>o</sub> &mdash; the parameters become &theta; = {W, U, b, E}. This works better empirically and becomes common practice, except for very large models. (Sharing W across time steps is a property of every RNN, not the &ldquo;weight tying&rdquo; trick.)</p>
+      </div>
+    </article>
+
+  <h2>Part 2 · Multiple Answers (select all that apply)</h2>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q1</span><span class="tag">Multiple Answers</span><span class="ref">4.2 · slide 32</span></div>
+      <p class="stem">Which of the following are used in the lecture to handle the sparsity (zero-probability) problem of n-gram models? Select all that apply.</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Increasing the n-gram order k, so that contexts become more specific.</li>
+        <li><span class="key">B.</span> Additive (Laplace) smoothing: add a small amount &alpha; to all counts.</li>
+        <li><span class="key">C.</span> Discounting: redistribute probability mass from observed n-grams to unobserved ones.</li>
+        <li><span class="key">D.</span> Interpolation: combine different granularities of n-grams (e.g., trigram + bigram + unigram).</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B, C and D.</b></p>
+        <p class="awhy">The three remedies listed in the lecture are additive smoothing, interpolation and discounting. Increasing k makes sparsity worse (that is the problem being addressed), not better.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q2</span><span class="tag">Multiple Answers</span><span class="ref">4.2 · slides 50–51</span></div>
+      <p class="stem">Which limitations apply to the feedforward neural language model with a fixed window of m words? Select all that apply.</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> The model cannot be trained by gradient descent.</li>
+        <li><span class="key">B.</span> W grows linearly with the context size m.</li>
+        <li><span class="key">C.</span> The output is not a probability distribution over the vocabulary.</li>
+        <li><span class="key">D.</span> The model learns separate patterns for the same context words appearing at different positions.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: B and D.</b></p>
+        <p class="awhy">The lecture&rsquo;s &ldquo;Limitations?&rdquo; list: W scales linearly with the context size m, and the model learns separate patterns for different positions (&ldquo;sat on&rdquo; corresponds to different parameters in W depending on where it appears in the window). Better solutions: recurrent NNs and Transformers. Options A and C are false: the model is trained by gradient descent and outputs a |V|-way softmax distribution.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q3</span><span class="tag">Multiple Answers</span><span class="ref">5.1 · slide 13</span></div>
+      <p class="stem">Which of the following are advantages of (simple) RNNs listed in the lecture? Select all that apply.</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> Can process inputs of any length.</li>
+        <li><span class="key">B.</span> Model size does not increase for longer input context.</li>
+        <li><span class="key">C.</span> The recurrent computation is fast and can be parallelized across time steps.</li>
+        <li><span class="key">D.</span> In theory, the computation at step t can use information from many steps back.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A, B and D.</b></p>
+        <p class="awhy">Option C describes a disadvantage: recurrent computation is slow (it cannot be parallelized over time steps), which is one motivation for Transformer networks. The lecture also notes that in practice it is difficult to access information from many steps back (an optimization issue), even though this is possible &ldquo;in theory&rdquo;.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q4</span><span class="tag">Multiple Answers</span><span class="ref">5.1 · slides 42–47</span></div>
+      <p class="stem">Which statements about bidirectional RNNs are correct? Select all that apply.</p>
+      <ul class="opts">
+        <li><span class="key">A.</span> A hidden state can combine information from both the left and the right context.</li>
+        <li><span class="key">B.</span> They are applicable only when the entire input sequence is available.</li>
+        <li><span class="key">C.</span> They are a good fit for text classification (e.g., concatenate the two final hidden states or pool over all hidden states).</li>
+        <li><span class="key">D.</span> They are the natural choice for autoregressive text generation.</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: A, B and C.</b></p>
+        <p class="awhy">A bidirectional RNN runs one RNN left-to-right and one right-to-left: h<sub>t</sub> can contain information from x<sub>1</sub> … x<sub>t</sub> and from x<sub>t</sub> … x<sub>n</sub>, which is why bidirectionality is powerful when you have the <i>entire</i> input (the key idea behind BERT). For text generation you cannot see the future to predict the next word, so option D is wrong.</p>
+      </div>
+    </article>
+
+  <h2>Part 3 · True / False</h2>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q1</span><span class="tag">True / False</span><span class="ref">4.2 · slides 8, 20</span></div>
+      <p class="stem">A language model can be used both to score how likely a given sentence is and to generate text by predicting one word at a time.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">The LM defines P(w<sub>1</sub>, …, w<sub>n</sub>) via the chain rule (so it can score sentences), and generation uses the estimated distribution to predict one word at a time — choosing the most likely word or sampling from the distribution.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q2</span><span class="tag">True / False</span><span class="ref">4.2 · slide 17</span></div>
+      <p class="stem">Using a larger n in an n-gram model always gives a better model in practice, because it captures more context.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">Larger n is &ldquo;more accurate and better — <i>assuming infinite data</i>&rdquo;. With finite data, most long n-grams are never observed, so the probabilities cannot be estimated reliably (too sparse). This is exactly why we cannot simply keep a very large value of k.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q3</span><span class="tag">True / False</span><span class="ref">4.2 · slide 25</span></div>
+      <p class="stem">In intrinsic evaluation, it is acceptable to train the model on part of the test corpus, as long as perplexity is reported.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">Intrinsic evaluation must be done on a different, unseen corpus: &ldquo;Training on any part of test set not acceptable!&rdquo; A model trained on test data would look artificially good.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q4</span><span class="tag">True / False</span><span class="ref">4.2 · slides 31–32</span></div>
+      <p class="stem">If a language model assigns probability zero to some word of the test corpus, its perplexity is undefined (infinite) unless smoothing is applied.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">If P(affray | voice doth us) = 0 for some word in the test corpus, then P(test corpus) = 0 and the perplexity is undefined — one reason we need smoothing, which makes sure all probabilities are non-zero.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q5</span><span class="tag">True / False</span><span class="ref">5.1 · slides 7–8, 13</span></div>
+      <p class="stem">In a simple RNN, the number of parameters grows with the length of the input sequence.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">This is one of the advantages of RNNs: model size does not increase for longer input context. The same weights W, U, b are reused at every time step, so the parameter count is fixed by d and h, regardless of the sequence length.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q6</span><span class="tag">True / False</span><span class="ref">5.1 · slides 28–29</span></div>
+      <p class="stem">Gradient clipping is mainly used to solve the vanishing gradient problem.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">Gradient clipping (scale the gradient down when its norm exceeds a threshold, before the SGD update) is a solution for gradient <i>exploding</i>. Gradient <i>vanishing</i> is a harder problem to solve, and it motivates advanced RNN variants such as LSTMs and GRUs.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q7</span><span class="tag">True / False</span><span class="ref">5.1 · slide 30</span></div>
+      <p class="stem">With truncated backpropagation through time, hidden states are carried forward across chunks, but gradients are back-propagated only for a limited number of steps.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">Truncated BPTT runs forward and backward through chunks of the sequence instead of the whole sequence: &ldquo;carry hidden states forward in time forever, but only back-propagate for some smaller number of steps.&rdquo; This keeps training affordable for long sequences.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q8</span><span class="tag">True / False</span><span class="ref">5.1 · slides 27–28</span></div>
+      <p class="stem">Because of vanishing gradients, an RNNLM may capture the wrong dependency: in &ldquo;The writer of the books ___ planning a sequel&rdquo;, it may prefer &ldquo;are&rdquo; since the nearer word &ldquo;books&rdquo; dominates the signal.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">The correct subject &ldquo;writer&rdquo; (singular &rarr; &ldquo;is&rdquo;) is far from the verb, while &ldquo;books&rdquo; is close. When gradients vanish, information from many steps back fades, so the model may in effect capture the wrong <i>recent</i> dependency and predict &ldquo;are&rdquo; — one of the key motivations for better RNN variants.</p>
+      </div>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="num">Q9</span><span class="tag">True / False</span><span class="ref">5.1 · slides 40–41</span></div>
+      <p class="stem">Stacking 2&ndash;4 RNN layers is common in practice and is usually better than a single layer.</p>
+      <ul class="opts">
+        <li><span class="key">T.</span> True</li>
+        <li><span class="key">F.</span> False</li>
+      </ul>
+      <button class="reveal" type="button" aria-expanded="false">Show Answer</button>
+      <div class="ans" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">RNNs are already &ldquo;deep&rdquo; along the time dimension; stacking layers adds depth in another dimension (the hidden states of one layer feed the next). The lecture notes that 2 to 4 layers is common and usually better than 1 layer; Transformer networks can go up to 24 layers with skip-connections.</p>
+      </div>
+    </article>
+
+  <footer>APAI4011 · self-contained review quiz · no external libraries</footer>
+</div>
+<script>
+  document.querySelectorAll('.reveal').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var box = btn.nextElementSibling;
+      var open = box.hasAttribute('hidden');
+      if (open) { box.removeAttribute('hidden'); } else { box.setAttribute('hidden', ''); }
+      btn.setAttribute('aria-expanded', String(open));
+      btn.textContent = open ? 'Hide Answer' : 'Show Answer';
+    });
+  });
+  function setAll(show) {
+    document.querySelectorAll('.q').forEach(function (q) {
+      var box = q.querySelector('.ans'), btn = q.querySelector('.reveal');
+      if (show) { box.removeAttribute('hidden'); } else { box.setAttribute('hidden', ''); }
+      btn.setAttribute('aria-expanded', String(show));
+      btn.textContent = show ? 'Hide Answer' : 'Show Answer';
+    });
+  }
+  document.getElementById('showAll').addEventListener('click', function () { setAll(true); });
+  document.getElementById('hideAll').addEventListener('click', function () { setAll(false); });
+</script>
+</body>
+</html>
