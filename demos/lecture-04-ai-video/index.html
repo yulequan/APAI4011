@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AI-generated animated overview of Lecture 4: language models, next-word prediction, counting-based n-grams, and the neural training loop.">
+  <title>Lecture 4 — AI-generated video · APAI4011</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #102a43;
+      --muted: #5b7083;
+      --teal: #0b7285;
+      --teal-dark: #075f6f;
+      --teal-soft: #e7f6f7;
+      --line: #c7d7df;
+      --page: #f3f7f9;
+      --card: rgba(255, 255, 255, .9);
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --serif: Georgia, "Times New Roman", serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { background: var(--page); }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 7% 5%, rgba(34, 166, 179, .1), transparent 26rem),
+        linear-gradient(180deg, #f9fbfc 0%, var(--page) 78%);
+      color: var(--ink);
+      font-family: Aptos, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.62;
+    }
+
+    main {
+      width: min(1100px, 100%);
+      margin: 0 auto;
+      padding: 2rem clamp(1rem, 4vw, 3rem) 1.4rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: var(--serif);
+      letter-spacing: -.025em;
+      font-size: clamp(1.9rem, 3.6vw, 3rem);
+      line-height: 1.05;
+    }
+
+    .eyebrow {
+      margin: 0 0 .45rem;
+      color: var(--teal);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    .site-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 2rem;
+      margin-bottom: 1.7rem;
+    }
+
+    .header-copy {
+      margin: .7rem 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .header-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: .65rem;
+      flex-wrap: wrap;
+    }
+
+    .pill-link {
+      display: inline-flex;
+      align-items: center;
+      gap: .55rem;
+      min-height: 2.75rem;
+      padding: .7rem 1rem;
+      border: 1px solid #b8cbd5;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .76);
+      color: #24485d;
+      font-size: .9rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: 160ms ease;
+    }
+
+    .pill-link:hover, .pill-link:focus-visible {
+      border-color: var(--teal);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .player {
+      margin: 0 0 1.6rem;
+      border: 1px solid #bdd0da;
+      border-radius: 1rem;
+      overflow: hidden;
+      background: #0b1a26;
+      box-shadow: 0 14px 40px rgba(30, 64, 85, .14);
+    }
+
+    .player video {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .notes {
+      padding: 1.15rem 1.3rem;
+      border: 1px solid #bdd0da;
+      border-radius: 1rem;
+      background: var(--card);
+      box-shadow: 0 10px 30px rgba(30, 64, 85, .06);
+    }
+
+    .notes h2 {
+      margin: 0 0 .6rem;
+      font-family: var(--serif);
+      font-size: 1.2rem;
+      color: var(--teal-dark);
+    }
+
+    .notes ul { margin: 0; padding-left: 1.2rem; }
+    .notes li { padding: .14rem 0; }
+
+    .notes code {
+      font-family: var(--mono);
+      font-size: .85em;
+      padding: .1rem .35rem;
+      border: 1px solid var(--line);
+      border-radius: .4rem;
+      background: #f7fafb;
+    }
+
+    footer {
+      padding: 1rem 0 0;
+      color: #718596;
+      font-size: .76rem;
+      text-align: center;
+    }
+
+    footer p { margin: 0; }
+
+    @media (max-width: 680px) {
+      .site-header { display: block; }
+      .header-actions { justify-content: flex-start; margin-top: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">APAI4011 · Lecture 4</p>
+        <h1>Language models — AI-generated demonstration</h1>
+        <p class="header-copy">A 12-minute animated walkthrough of how language models work, from next-word prediction to the neural training loop.</p>
+      </div>
+      <div class="header-actions">
+        <a class="pill-link" href="../../">← All demos</a>
+        <a class="pill-link" href="../../tests/lecture-04-05-lm-and-rnn/">? Review quiz</a>
+      </div>
+    </header>
+
+    <section class="player" aria-label="Lecture 4 AI-generated demonstration video">
+      <video controls preload="metadata" playsinline poster="./poster.jpg">
+        <source src="./lecture-04-ai-generated-video.mp4" type="video/mp4">
+        Your browser cannot play this video. <a href="./lecture-04-ai-generated-video.mp4">Download it here</a>.
+      </video>
+    </section>
+
+    <section class="notes" aria-labelledby="notes-title">
+      <h2 id="notes-title">What the video covers</h2>
+      <ul>
+        <li>Next-word prediction: a language model outputs a probability distribution over the vocabulary, not a single answer.</li>
+        <li>Training examples and sentence boundaries, with tokens like <code>&lt;s&gt;</code> and <code>&lt;/s&gt;</code>.</li>
+        <li>Solving the same prediction task by counting &mdash; the n-gram view &mdash; and where counting breaks down.</li>
+        <li>One neural training step in PyTorch: zero the gradients, forward pass, loss, backward pass, optimizer step.</li>
+        <li>Unknown words: collapsing rare tokens to <code>&lt;unk&gt;</code>, and what their identity loss costs the model.</li>
+        <li>The closing takeaway: producing numbers is not the same as understanding.</li>
+      </ul>
+    </section>
+
+    <footer><p>APAI4011 · AI-generated demonstration video for Lecture 4 (language models and RNNs).</p></footer>
+  </main>
+</body>
+</html>

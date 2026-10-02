@@ -7,6 +7,7 @@ Small, self-contained teaching demos and self-check quizzes for APAI4011 Natural
 - [Demo & quiz collection](https://yulequan.github.io/APAI4011/)
 - [Gradient Descent, Step by Step](https://yulequan.github.io/APAI4011/demos/logistic-gradient-descent/)
 - [Word2Vec: From Context to Embeddings](https://yulequan.github.io/APAI4011/demos/word2vec-context-prediction/)
+- [Lecture 4 AI-generated demonstration video](https://yulequan.github.io/APAI4011/demos/lecture-04-ai-video/)
 - [Lecture 3 quiz: Word Embedding, Set B](https://yulequan.github.io/APAI4011/tests/lecture-03-word-embedding/)
 - [Lecture 3 quiz: Word Embedding, Set A](https://yulequan.github.io/APAI4011/tests/lecture-03-word-embedding/set-a.html)
 - [Lectures 4.2 & 5.1 quiz: Language Models and RNNs, Set B](https://yulequan.github.io/APAI4011/tests/lecture-04-05-lm-and-rnn/)
@@ -21,6 +22,10 @@ demos/
     index.html
   word2vec-context-prediction/
     index.html
+  lecture-04-ai-video/
+    index.html
+    lecture-04-ai-generated-video.mp4
+    poster.jpg
 tests/
   lecture-03-word-embedding/
     index.html
