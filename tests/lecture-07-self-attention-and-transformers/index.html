@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="40 self-check questions for APAI4011 Lecture 7: self-attention, Transformers, masking, FlashAttention and KV caching, with worked explanations and slide references.">
+<title>Lecture 7: Self-Attention &amp; Transformers — Review Quiz</title>
+<style>
+    :root {
+      color-scheme: light;
+      --ink: #102a43;
+      --muted: #5b7083;
+      --teal: #0b7285;
+      --teal-dark: #075f6f;
+      --teal-soft: #e7f6f7;
+      --line: #c7d7df;
+      --page: #f3f7f9;
+      --card: rgba(255, 255, 255, .9);
+      --green: #197046;
+      --green-soft: #eaf6ef;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --serif: Georgia, "Times New Roman", serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0 1rem 4.5rem;
+      background:
+        radial-gradient(circle at 7% 5%, rgba(34, 166, 179, .1), transparent 26rem),
+        linear-gradient(180deg, #f9fbfc 0%, var(--page) 78%);
+      color: var(--ink);
+      font-family: Aptos, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.62;
+    }
+
+    .wrap { max-width: 920px; margin: 0 auto; }
+
+    .setnav { display: flex; flex-wrap: wrap; gap: .45rem; padding: 1.7rem 0 0; }
+
+    .chip {
+      padding: .35rem .8rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--teal);
+      font-size: .8rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .chip:hover { background: var(--teal-soft); }
+
+    .chip.current { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+    header {
+      padding: 1.05rem 0 1.1rem;
+      border-bottom: 3px solid var(--teal);
+      margin-bottom: 1.3rem;
+    }
+
+    h1 {
+      margin: 0 0 .35rem;
+      font-family: var(--serif);
+      font-size: clamp(1.7rem, 4vw, 2.35rem);
+      letter-spacing: -.02em;
+      line-height: 1.15;
+    }
+
+    .sub { margin: 0; color: var(--muted); font-size: .92rem; }
+    .meta { margin: .7rem 0 0; color: var(--muted); font-size: .8rem; }
+
+    .toolbar { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1.1rem 0 1.6rem; }
+
+    .toolbar button {
+      font: inherit; font-size: .84rem; font-weight: 700;
+      padding: .48rem .85rem; border-radius: .6rem;
+      border: 1px solid var(--teal); background: #fff; color: var(--teal);
+      cursor: pointer; transition: background 160ms ease;
+    }
+
+    .toolbar button:hover { background: var(--teal-soft); }
+
+    h2 {
+      margin: 2rem 0 .9rem;
+      padding-left: .6rem;
+      border-left: 4px solid var(--teal);
+      color: var(--teal-dark);
+      font-family: var(--serif);
+      font-size: 1.35rem;
+    }
+
+    .q {
+      margin: 0 0 .85rem;
+      padding: 1rem 1.1rem;
+      border: 1px solid #bdd0da;
+      border-radius: 1rem;
+      background: var(--card);
+      box-shadow: 0 10px 30px rgba(30, 64, 85, .06);
+    }
+
+    .qhead { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem; margin-bottom: .45rem; }
+
+    .num { color: var(--teal); font-family: var(--mono); font-size: .82rem; font-weight: 800; }
+
+    .tag {
+      padding: .12rem .55rem; border: 1px solid var(--line); border-radius: 999px;
+      background: #f7fafb; color: var(--muted); font-size: .72rem; font-weight: 700;
+    }
+
+    .ref { margin-left: auto; color: #718596; font-family: var(--mono); font-size: .72rem; }
+
+    .stem { margin: 0 0 .6rem; }
+    .opts { margin: 0 0 .8rem; padding: 0; list-style: none; }
+    .opts li { padding: .15rem 0; }
+    .key { display: inline-block; min-width: 1.4rem; color: var(--muted); font-weight: 700; }
+
+    .reveal {
+      font: inherit; font-size: .82rem; font-weight: 700;
+      padding: .42rem .8rem; border: 1px solid var(--line); border-radius: .6rem;
+      background: #f8fbfc; color: var(--teal); cursor: pointer;
+    }
+
+    .reveal:hover { background: var(--teal-soft); }
+
+    .ans {
+      margin-top: .75rem; padding: .7rem .95rem;
+      border-left: 3px solid var(--green);
+      border-radius: 0 .6rem .6rem 0;
+      background: var(--green-soft);
+    }
+
+    .ans p { margin: 0 0 .4rem; }
+    .ans p:last-child { margin-bottom: 0; }
+    .akey { color: var(--green); }
+    .awhy { font-size: .95rem; }
+
+    footer {
+      margin-top: 2.4rem; padding-top: .9rem;
+      border-top: 1px solid var(--line);
+      color: #718596; font-size: .78rem;
+    }
+
+    html { scroll-behavior: smooth; }
+    a { color: var(--teal-dark); }
+    .intro { margin: .85rem 0 0; font-size: .9rem; color: var(--muted); }
+    .q { scroll-margin-top: 1rem; }
+    .opts label { display: flex; gap: .55rem; align-items: baseline; padding: .28rem .3rem; border-radius: .35rem; cursor: pointer; }
+    .opts label:hover { background: var(--teal-soft); }
+    .opts input { flex-shrink: 0; accent-color: var(--teal); }
+    .opts .key { flex-shrink: 0; }
+    .opts input:checked + .choice { color: var(--teal-dark); font-weight: 600; }
+    fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+    legend.stem { padding: 0; width: 100%; }
+    .feedback { margin: .6rem 0 0; font-weight: 700; font-size: .88rem; }
+    .feedback.correct { color: var(--green); }
+    .feedback.incorrect { color: #a12622; }
+    .feedback.unanswered { color: var(--muted); }
+    .score { padding: .8rem 1rem; background: var(--teal-soft); border: 1px solid var(--line); border-radius: .6rem; }
+    #checkAnswers { background: var(--teal); color: white; }
+    #checkAnswers:hover { background: var(--teal-dark); }
+    :focus-visible { outline: 3px solid #bd7108; outline-offset: 3px; }
+    .formula { overflow-wrap: anywhere; }
+    footer p { margin: .45rem 0; }
+    @media (max-width: 520px) {
+      body { padding-left: .6rem; padding-right: .6rem; }
+      .q { padding: .9rem .75rem; }
+      .ref { margin-left: 0; }
+      .toolbar button { min-height: 44px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    @media print {
+      body { background: white; padding: 0; font-size: 11pt; }
+      .setnav, .toolbar, .reveal, .score, noscript { display: none; }
+      .q { box-shadow: none; break-inside: avoid; }
+      h2 { break-after: avoid; }
+    }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <nav class="setnav" aria-label="Quiz navigation">
+    <a class="chip" href="../../">← All demos &amp; quizzes</a>
+    <a class="chip" href="#concepts">Core Concepts</a>
+    <a class="chip" href="#calculations">Calculations & Applications</a>
+    <a class="chip" href="#multiple-answer">Multiple Answer</a>
+    <a class="chip" href="#true-false">True / False</a>
+  </nav>
+  <header>
+    <h1>Lecture 7: Self-Attention &amp; Transformers — Review Quiz</h1>
+    <p class="sub">APAI/STAT/SDST 4011 Natural Language Processing · Lecture 7</p>
+    <p class="meta">24 multiple-choice + 6 multiple-answer + 10 true/false questions · 40 questions</p>
+    <p class="intro">Try each question before revealing its answer. Select your choices and use “Check My Answers” for a score, or reveal individual explanations as you go. Slide references refer to Lecture 7. Answers are checked in this browser and are not submitted or saved; reloading clears your selections.</p>
+  </header>
+  <div class="toolbar" aria-label="Quiz controls">
+    <button id="checkAnswers" type="button">Check My Answers</button>
+    <button id="showAll" type="button">Show All Answers</button>
+    <button id="hideAll" type="button">Hide All Answers</button>
+    <button id="resetQuiz" type="button">Reset Quiz</button>
+  </div>
+  <p class="score" id="score" role="status" aria-live="polite" tabindex="-1" hidden></p>
+  <noscript><p>Enable JavaScript to check your choices and show or hide answer explanations.</p></noscript>
+
+  <section aria-labelledby="concepts">
+    <h2 id="concepts">Part 1 · Multiple Choice — Core Concepts</h2>
+    <p class="intro">Choose one answer for each question.</p>
+    <article class="q" id="q1" data-answer="2">
+      <div class="qhead"><span class="num">Q1</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 14–19</span></div>
+      <fieldset>
+        <legend class="stem">Why can a contextual embedding represent “it” differently in “The chicken did not cross the road because it was too tired” and “…because it was too wide”?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q1" value="0"><span class="choice"><span class="key">A.</span> It assigns a new vocabulary ID to every occurrence of “it”.</span></label></li>
+          <li><label><input type="radio" name="q1" value="1"><span class="choice"><span class="key">B.</span> It replaces each word with its position in the sentence.</span></label></li>
+          <li><label><input type="radio" name="q1" value="2"><span class="choice"><span class="key">C.</span> It incorporates information from the surrounding tokens.</span></label></li>
+          <li><label><input type="radio" name="q1" value="3"><span class="choice"><span class="key">D.</span> It gives every token in a sentence the same vector.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-1">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-1" hidden>
+        <p class="akey"><b>Answer: C. It incorporates information from the surrounding tokens.</b></p>
+        <p class="awhy">A contextual representation depends on the surrounding tokens. The continuation can help connect “it” to the chicken or the road. A static word embedding uses the same lookup vector for “it” in both sentences.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q2" data-answer="1">
+      <div class="qhead"><span class="num">Q2</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 22–28</span></div>
+      <fieldset>
+        <legend class="stem">Which description correctly matches the roles of queries, keys and values in an attention head?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q2" value="0"><span class="choice"><span class="key">A.</span> Queries are averaged; keys are the final predictions; values select the vocabulary.</span></label></li>
+          <li><label><input type="radio" name="q2" value="1"><span class="choice"><span class="key">B.</span> Queries are compared with keys to obtain weights; those weights combine the values.</span></label></li>
+          <li><label><input type="radio" name="q2" value="2"><span class="choice"><span class="key">C.</span> Queries and values determine positions; keys are added to the output.</span></label></li>
+          <li><label><input type="radio" name="q2" value="3"><span class="choice"><span class="key">D.</span> Keys are averaged using weights computed only from values.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-2">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-2" hidden>
+        <p class="akey"><b>Answer: B. Queries are compared with keys to obtain weights; those weights combine the values.</b></p>
+        <p class="awhy">A query describes what the current position seeks. Its similarity to each key determines an attention score. After normalization, these weights form a weighted sum of value vectors.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q3" data-answer="0">
+      <div class="qhead"><span class="num">Q3</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 29–31</span></div>
+      <fieldset>
+        <legend class="stem">What makes an attention layer a self-attention layer?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q3" value="0"><span class="choice"><span class="key">A.</span> Queries, keys and values are derived from the same input sequence.</span></label></li>
+          <li><label><input type="radio" name="q3" value="1"><span class="choice"><span class="key">B.</span> Every token attends only to itself.</span></label></li>
+          <li><label><input type="radio" name="q3" value="2"><span class="choice"><span class="key">C.</span> The query, key and value projection matrices must be identical.</span></label></li>
+          <li><label><input type="radio" name="q3" value="3"><span class="choice"><span class="key">D.</span> The output must equal the input.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-3">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-3" hidden>
+        <p class="akey"><b>Answer: A. Queries, keys and values are derived from the same input sequence.</b></p>
+        <p class="awhy">“Self” refers to the common source sequence. The learned query, key and value projections are usually different, and a token can attend to other positions as well as itself, subject to any mask.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q4" data-answer="3">
+      <div class="qhead"><span class="num">Q4</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 32, 36</span></div>
+      <fieldset>
+        <legend class="stem">Why does scaled dot-product attention divide each query–key dot product by √d<sub>k</sub>?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q4" value="0"><span class="choice"><span class="key">A.</span> To make the attention matrix square.</span></label></li>
+          <li><label><input type="radio" name="q4" value="1"><span class="choice"><span class="key">B.</span> To force every key to receive equal weight.</span></label></li>
+          <li><label><input type="radio" name="q4" value="2"><span class="choice"><span class="key">C.</span> To reduce the number of tokens from n to √n.</span></label></li>
+          <li><label><input type="radio" name="q4" value="3"><span class="choice"><span class="key">D.</span> To control score magnitude as the key/query dimension grows and reduce softmax saturation.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-4">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-4" hidden>
+        <p class="akey"><b>Answer: D. To control score magnitude as the key/query dimension grows and reduce softmax saturation.</b></p>
+        <p class="awhy">Under the usual independent, zero-mean, unit-variance component assumption, a dot product has variance d<sub>k</sub>. Dividing by √d<sub>k</sub> brings its variance back to about 1. Very large score differences can otherwise produce saturated softmax distributions and small gradients.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q5" data-answer="2">
+      <div class="qhead"><span class="num">Q5</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 32, 36, 70</span></div>
+      <fieldset>
+        <legend class="stem">In softmax(QK<sup>T</sup>/√d<sub>k</sub>)V, rows correspond to queries and columns to keys. Along which dimension is softmax applied?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q5" value="0"><span class="choice"><span class="key">A.</span> Across queries, separately for each key.</span></label></li>
+          <li><label><input type="radio" name="q5" value="1"><span class="choice"><span class="key">B.</span> Across value features, separately for each token.</span></label></li>
+          <li><label><input type="radio" name="q5" value="2"><span class="choice"><span class="key">C.</span> Across keys, separately for each query.</span></label></li>
+          <li><label><input type="radio" name="q5" value="3"><span class="choice"><span class="key">D.</span> Across all entries of the matrix at once.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-5">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-5" hidden>
+        <p class="akey"><b>Answer: C. Across keys, separately for each query.</b></p>
+        <p class="awhy">Each query needs its own distribution over the available key positions. Softmax therefore normalizes each row over keys. Assuming at least one unmasked key, each row sums to 1.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q6" data-answer="0">
+      <div class="qhead"><span class="num">Q6</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 28, 33</span></div>
+      <fieldset>
+        <legend class="stem">After an attention head computes its normalized weights, which vectors are directly combined to produce its output?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q6" value="0"><span class="choice"><span class="key">A.</span> Value vectors.</span></label></li>
+          <li><label><input type="radio" name="q6" value="1"><span class="choice"><span class="key">B.</span> Query vectors.</span></label></li>
+          <li><label><input type="radio" name="q6" value="2"><span class="choice"><span class="key">C.</span> Position indices.</span></label></li>
+          <li><label><input type="radio" name="q6" value="3"><span class="choice"><span class="key">D.</span> The rows of the output vocabulary matrix.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-6">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-6" hidden>
+        <p class="akey"><b>Answer: A. Value vectors.</b></p>
+        <p class="awhy">The head output is a weighted sum of values. Queries and keys determine how much each value contributes; they are not the vectors being averaged in this step.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q7" data-answer="1">
+      <div class="qhead"><span class="num">Q7</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 38–40</span></div>
+      <fieldset>
+        <legend class="stem">How are the outputs of multiple attention heads combined in the original Transformer?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q7" value="0"><span class="choice"><span class="key">A.</span> Keep only the head with the largest attention score.</span></label></li>
+          <li><label><input type="radio" name="q7" value="1"><span class="choice"><span class="key">B.</span> Concatenate the head outputs, then apply a learned output projection.</span></label></li>
+          <li><label><input type="radio" name="q7" value="2"><span class="choice"><span class="key">C.</span> Average the query matrices and discard the values.</span></label></li>
+          <li><label><input type="radio" name="q7" value="3"><span class="choice"><span class="key">D.</span> Run one head per sentence and vote on the predicted word.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-7">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-7" hidden>
+        <p class="akey"><b>Answer: B. Concatenate the head outputs, then apply a learned output projection.</b></p>
+        <p class="awhy">Each head has its own learned projections and can capture different relations. Their output vectors are concatenated and multiplied by an output projection W<sup>O</sup> to return to the model dimension.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q8" data-answer="3">
+      <div class="qhead"><span class="num">Q8</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 42–43</span></div>
+      <fieldset>
+        <legend class="stem">Why is positional information added to token embeddings in the standard Transformer encoder?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q8" value="0"><span class="choice"><span class="key">A.</span> To make all occurrences of a word share a vector.</span></label></li>
+          <li><label><input type="radio" name="q8" value="1"><span class="choice"><span class="key">B.</span> To ensure that attention weights sum to 1.</span></label></li>
+          <li><label><input type="radio" name="q8" value="2"><span class="choice"><span class="key">C.</span> To remove the need for a feedforward network.</span></label></li>
+          <li><label><input type="radio" name="q8" value="3"><span class="choice"><span class="key">D.</span> To supply order information that unrestricted self-attention does not encode by itself.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-8">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-8" hidden>
+        <p class="akey"><b>Answer: D. To supply order information that unrestricted self-attention does not encode by itself.</b></p>
+        <p class="awhy">Without positional information or another position-dependent mechanism, unrestricted self-attention treats a permutation of input tokens as the corresponding permutation of outputs. Position encodings let the model use where tokens occur, as well as what they are.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q9" data-answer="2">
+      <div class="qhead"><span class="num">Q9</span><span class="tag">Multiple Choice</span><span class="ref">7 · slide 44</span></div>
+      <fieldset>
+        <legend class="stem">What does the position-wise feedforward network do within one Transformer layer?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q9" value="0"><span class="choice"><span class="key">A.</span> It applies a different network with separate parameters at each position.</span></label></li>
+          <li><label><input type="radio" name="q9" value="1"><span class="choice"><span class="key">B.</span> It directly computes pairwise scores between every pair of tokens.</span></label></li>
+          <li><label><input type="radio" name="q9" value="2"><span class="choice"><span class="key">C.</span> It applies the same nonlinear transformation independently to each position.</span></label></li>
+          <li><label><input type="radio" name="q9" value="3"><span class="choice"><span class="key">D.</span> It sorts tokens into their original order.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-9">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-9" hidden>
+        <p class="akey"><b>Answer: C. It applies the same nonlinear transformation independently to each position.</b></p>
+        <p class="awhy">Within a layer, the same FFN parameters are shared across positions. The FFN transforms features at each position; attention is the sub-layer that mixes information across positions. The FFN adds nonlinear feature processing.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q10" data-answer="0">
+      <div class="qhead"><span class="num">Q10</span><span class="tag">Multiple Choice</span><span class="ref">7 · slide 46</span></div>
+      <fieldset>
+        <legend class="stem">Which two main sub-layers form one encoder layer in the original Transformer?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q10" value="0"><span class="choice"><span class="key">A.</span> Multi-head self-attention and a position-wise feedforward network.</span></label></li>
+          <li><label><input type="radio" name="q10" value="1"><span class="choice"><span class="key">B.</span> Masked self-attention and encoder–decoder cross-attention.</span></label></li>
+          <li><label><input type="radio" name="q10" value="2"><span class="choice"><span class="key">C.</span> A recurrent layer and a convolutional layer.</span></label></li>
+          <li><label><input type="radio" name="q10" value="3"><span class="choice"><span class="key">D.</span> A vocabulary softmax and a tokenization layer.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-10">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-10" hidden>
+        <p class="akey"><b>Answer: A. Multi-head self-attention and a position-wise feedforward network.</b></p>
+        <p class="awhy">An encoder layer contains multi-head self-attention followed by a position-wise FFN, with residual connections and layer normalization around the sub-layers. Encoder–decoder cross-attention belongs to the decoder.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q11" data-answer="1">
+      <div class="qhead"><span class="num">Q11</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 49, 53</span></div>
+      <fieldset>
+        <legend class="stem">In encoder–decoder cross-attention for translation, where do queries, keys and values come from?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q11" value="0"><span class="choice"><span class="key">A.</span> Queries and keys come from the encoder; values come from the decoder.</span></label></li>
+          <li><label><input type="radio" name="q11" value="1"><span class="choice"><span class="key">B.</span> Queries come from decoder states; keys and values come from encoder outputs.</span></label></li>
+          <li><label><input type="radio" name="q11" value="2"><span class="choice"><span class="key">C.</span> Queries, keys and values all come from decoder states.</span></label></li>
+          <li><label><input type="radio" name="q11" value="3"><span class="choice"><span class="key">D.</span> Queries come from target labels; keys and values are fixed positional encodings.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-11">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-11" hidden>
+        <p class="akey"><b>Answer: B. Queries come from decoder states; keys and values come from encoder outputs.</b></p>
+        <p class="awhy">The decoder query asks which source information is useful for its current target position. The encoder provides the source-side keys and values. Source and target sequence lengths do not have to match.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q12" data-answer="3">
+      <div class="qhead"><span class="num">Q12</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 50–51</span></div>
+      <fieldset>
+        <legend class="stem">A student implements causal masking by setting future-token logits to 0 before softmax. What is the problem?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q12" value="0"><span class="choice"><span class="key">A.</span> Softmax cannot accept a zero logit.</span></label></li>
+          <li><label><input type="radio" name="q12" value="1"><span class="choice"><span class="key">B.</span> The mask removes all previous tokens.</span></label></li>
+          <li><label><input type="radio" name="q12" value="2"><span class="choice"><span class="key">C.</span> This makes the value vectors zero.</span></label></li>
+          <li><label><input type="radio" name="q12" value="3"><span class="choice"><span class="key">D.</span> A zero logit still contributes exp(0) = 1, so future tokens can receive positive attention weight.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-12">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-12" hidden>
+        <p class="akey"><b>Answer: D. A zero logit still contributes exp(0) = 1, so future tokens can receive positive attention weight.</b></p>
+        <p class="awhy">An additive causal mask uses −∞ at forbidden positions (or an appropriate large negative value in an implementation). Their exponentials then become zero. Merely replacing a score with 0 does not exclude that position.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q13" data-answer="2">
+      <div class="qhead"><span class="num">Q13</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 47–48</span></div>
+      <fieldset>
+        <legend class="stem">Ignoring dropout, which expression matches the post-normalization “Add & Norm” block shown in the lecture?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q13" value="0"><span class="choice"><span class="key">A.</span> x + LayerNorm(Sublayer(x))</span></label></li>
+          <li><label><input type="radio" name="q13" value="1"><span class="choice"><span class="key">B.</span> LayerNorm(x) + Sublayer(x)</span></label></li>
+          <li><label><input type="radio" name="q13" value="2"><span class="choice"><span class="key">C.</span> LayerNorm(x + Sublayer(x))</span></label></li>
+          <li><label><input type="radio" name="q13" value="3"><span class="choice"><span class="key">D.</span> Sublayer(LayerNorm(x + x))</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-13">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-13" hidden>
+        <p class="akey"><b>Answer: C. LayerNorm(x + Sublayer(x))</b></p>
+        <p class="awhy">The residual connection first adds the sub-layer input to its output; layer normalization is then applied to that sum. This question refers to the original post-norm block in the slides, not the pre-norm variants used in other Transformers.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q14" data-answer="0">
+      <div class="qhead"><span class="num">Q14</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 50–51, 57</span></div>
+      <fieldset>
+        <legend class="stem">How can a Transformer decoder compute training predictions at all target positions in parallel without leaking the target token being predicted?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q14" value="0"><span class="choice"><span class="key">A.</span> Use right-shifted gold target inputs together with causal self-attention masking.</span></label></li>
+          <li><label><input type="radio" name="q14" value="1"><span class="choice"><span class="key">B.</span> Feed the unshifted target and let every position attend everywhere.</span></label></li>
+          <li><label><input type="radio" name="q14" value="2"><span class="choice"><span class="key">C.</span> Replace the decoder with the encoder during training.</span></label></li>
+          <li><label><input type="radio" name="q14" value="3"><span class="choice"><span class="key">D.</span> Remove all target-side context from every prediction.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-14">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-14" hidden>
+        <p class="akey"><b>Answer: A. Use right-shifted gold target inputs together with causal self-attention masking.</b></p>
+        <p class="awhy">With teacher forcing, the gold target sequence is available during training. Shifting it right puts only earlier target tokens at or before each prediction position, while the causal mask blocks later positions. Predictions across these positions can then be computed in parallel.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q15" data-answer="3">
+      <div class="qhead"><span class="num">Q15</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 70–73</span></div>
+      <fieldset>
+        <legend class="stem">What is the main idea behind dense FlashAttention as introduced in the lecture?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q15" value="0"><span class="choice"><span class="key">A.</span> Keep only the largest attention weight in each row.</span></label></li>
+          <li><label><input type="radio" name="q15" value="1"><span class="choice"><span class="key">B.</span> Replace attention with a recurrent hidden state.</span></label></li>
+          <li><label><input type="radio" name="q15" value="2"><span class="choice"><span class="key">C.</span> Approximate every attention matrix by a rank-one matrix.</span></label></li>
+          <li><label><input type="radio" name="q15" value="3"><span class="choice"><span class="key">D.</span> Compute attention in blocks and reduce transfers between HBM and on-chip SRAM.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-15">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-15" hidden>
+        <p class="akey"><b>Answer: D. Compute attention in blocks and reduce transfers between HBM and on-chip SRAM.</b></p>
+        <p class="awhy">FlashAttention reorganizes exact attention using tiling and recomputation to reduce memory reads and writes, avoiding storage of the full attention matrix in HBM. Dense FlashAttention does not gain its speed by dropping token pairs.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q16" data-answer="1">
+      <div class="qhead"><span class="num">Q16</span><span class="tag">Multiple Choice</span><span class="ref">7 · slide 75</span></div>
+      <fieldset>
+        <legend class="stem">In the Vision Transformer (ViT) shown in the lecture, what plays the role of the input token sequence?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q16" value="0"><span class="choice"><span class="key">A.</span> A sequence of predicted class names.</span></label></li>
+          <li><label><input type="radio" name="q16" value="1"><span class="choice"><span class="key">B.</span> Embeddings of image patches, with positional information.</span></label></li>
+          <li><label><input type="radio" name="q16" value="2"><span class="choice"><span class="key">C.</span> The rows of the final classification matrix.</span></label></li>
+          <li><label><input type="radio" name="q16" value="3"><span class="choice"><span class="key">D.</span> One word embedding for the entire image.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-16">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-16" hidden>
+        <p class="akey"><b>Answer: B. Embeddings of image patches, with positional information.</b></p>
+        <p class="awhy">ViT splits an image into patches, projects flattened patches into embeddings, and supplies positional information. A Transformer encoder can then process this sequence of patch representations.</p>
+      </div>
+    </article>
+  </section>
+
+  <section aria-labelledby="calculations">
+    <h2 id="calculations">Part 2 · Multiple Choice — Calculations & Applications</h2>
+    <p class="intro">Choose one answer. Numerical examples are new exercises based on the lecture methods.</p>
+    <article class="q" id="q17" data-answer="2">
+      <div class="qhead"><span class="num">Q17</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 32–34</span></div>
+      <fieldset>
+        <legend class="stem">For one query, the two scaled attention scores are [0, ln 3]. The value vectors are v<sub>1</sub> = [4, 0] and v<sub>2</sub> = [0, 8]. With no mask or dropout, what is the attention output?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q17" value="0"><span class="choice"><span class="key">A.</span> [3, 2]</span></label></li>
+          <li><label><input type="radio" name="q17" value="1"><span class="choice"><span class="key">B.</span> [2, 4]</span></label></li>
+          <li><label><input type="radio" name="q17" value="2"><span class="choice"><span class="key">C.</span> [1, 6]</span></label></li>
+          <li><label><input type="radio" name="q17" value="3"><span class="choice"><span class="key">D.</span> [4, 8]</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-17">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-17" hidden>
+        <p class="akey"><b>Answer: C. [1, 6]</b></p>
+        <p class="awhy">Softmax([0, ln 3]) = [1/(1+3), 3/(1+3)] = [0.25, 0.75]. The output is 0.25[4,0] + 0.75[0,8] = [1,6]. Scores must be normalized before they are used as weights.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q18" data-answer="0">
+      <div class="qhead"><span class="num">Q18</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 32, 36</span></div>
+      <fieldset>
+        <legend class="stem">A query–key dot product is 16 and d<sub>k</sub> = 64. What score is passed to softmax before any masking?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q18" value="0"><span class="choice"><span class="key">A.</span> 2</span></label></li>
+          <li><label><input type="radio" name="q18" value="1"><span class="choice"><span class="key">B.</span> 0.25</span></label></li>
+          <li><label><input type="radio" name="q18" value="2"><span class="choice"><span class="key">C.</span> 8</span></label></li>
+          <li><label><input type="radio" name="q18" value="3"><span class="choice"><span class="key">D.</span> 128</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-18">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-18" hidden>
+        <p class="akey"><b>Answer: A. 2</b></p>
+        <p class="awhy">The scale is √64 = 8, so the scaled score is 16/8 = 2. Dividing by d<sub>k</sub> itself would incorrectly give 0.25.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q19" data-answer="1">
+      <div class="qhead"><span class="num">Q19</span><span class="tag">Multiple Choice</span><span class="ref">7 · slide 36</span></div>
+      <fieldset>
+        <legend class="stem">A single self-attention head receives 5 tokens. Q and K each have shape 5 × 4, and V has shape 5 × 6. What are the shapes of the attention-weight matrix and the head output, respectively?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q19" value="0"><span class="choice"><span class="key">A.</span> 4 × 4 and 4 × 6</span></label></li>
+          <li><label><input type="radio" name="q19" value="1"><span class="choice"><span class="key">B.</span> 5 × 5 and 5 × 6</span></label></li>
+          <li><label><input type="radio" name="q19" value="2"><span class="choice"><span class="key">C.</span> 5 × 6 and 5 × 5</span></label></li>
+          <li><label><input type="radio" name="q19" value="3"><span class="choice"><span class="key">D.</span> 5 × 4 and 4 × 6</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-19">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-19" hidden>
+        <p class="akey"><b>Answer: B. 5 × 5 and 5 × 6</b></p>
+        <p class="awhy">QK<sup>T</sup> multiplies (5×4)(4×5), producing 5×5 scores. Multiplying the normalized 5×5 weights by the 5×6 value matrix produces a 5×6 output. Query/key width and value width need not be equal.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q20" data-answer="3">
+      <div class="qhead"><span class="num">Q20</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 36, 53</span></div>
+      <fieldset>
+        <legend class="stem">In one cross-attention head, there are 4 target query positions and 7 source key/value positions. The value dimension is 8. What are the attention-weight and output shapes?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q20" value="0"><span class="choice"><span class="key">A.</span> 7 × 4 and 7 × 8</span></label></li>
+          <li><label><input type="radio" name="q20" value="1"><span class="choice"><span class="key">B.</span> 4 × 4 and 4 × 8</span></label></li>
+          <li><label><input type="radio" name="q20" value="2"><span class="choice"><span class="key">C.</span> 7 × 7 and 7 × 8</span></label></li>
+          <li><label><input type="radio" name="q20" value="3"><span class="choice"><span class="key">D.</span> 4 × 7 and 4 × 8</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-20">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-20" hidden>
+        <p class="akey"><b>Answer: D. 4 × 7 and 4 × 8</b></p>
+        <p class="awhy">There is one row for each of the 4 target queries and one column for each of the 7 source keys. Thus the weights have shape 4×7; multiplying by V of shape 7×8 produces 4×8.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q21" data-answer="2">
+      <div class="qhead"><span class="num">Q21</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 40, 61</span></div>
+      <fieldset>
+        <legend class="stem">A multi-head attention layer uses d<sub>model</sub> = 512 and 8 heads, with d<sub>k</sub> = d<sub>v</sub> = d<sub>model</sub>/8. What are the value width per head and the concatenated output width?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q21" value="0"><span class="choice"><span class="key">A.</span> 512 and 4096</span></label></li>
+          <li><label><input type="radio" name="q21" value="1"><span class="choice"><span class="key">B.</span> 8 and 64</span></label></li>
+          <li><label><input type="radio" name="q21" value="2"><span class="choice"><span class="key">C.</span> 64 and 512</span></label></li>
+          <li><label><input type="radio" name="q21" value="3"><span class="choice"><span class="key">D.</span> 64 and 64</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-21">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-21" hidden>
+        <p class="akey"><b>Answer: C. 64 and 512</b></p>
+        <p class="awhy">Each head has value width 512/8 = 64. Concatenating 8 head outputs gives 8×64 = 512 features per token, before applying W<sup>O</sup>.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q22" data-answer="0">
+      <div class="qhead"><span class="num">Q22</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 50–52</span></div>
+      <fieldset>
+        <legend class="stem">For a length-5 decoder input, a causal mask allows each query to attend to itself and earlier positions. At input position 3 (one-based indexing), which key positions are allowed?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q22" value="0"><span class="choice"><span class="key">A.</span> 1, 2 and 3</span></label></li>
+          <li><label><input type="radio" name="q22" value="1"><span class="choice"><span class="key">B.</span> 1 and 2 only</span></label></li>
+          <li><label><input type="radio" name="q22" value="2"><span class="choice"><span class="key">C.</span> 3, 4 and 5</span></label></li>
+          <li><label><input type="radio" name="q22" value="3"><span class="choice"><span class="key">D.</span> All five positions</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-22">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-22" hidden>
+        <p class="akey"><b>Answer: A. 1, 2 and 3</b></p>
+        <p class="awhy">The standard causal mask permits key positions j ≤ i. At i = 3, positions 1, 2 and 3 are allowed. With right-shifted training inputs, attending to the current input position still does not reveal the target token being predicted.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q23" data-answer="3">
+      <div class="qhead"><span class="num">Q23</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 63–65, 70</span></div>
+      <fieldset>
+        <legend class="stem">For fixed head count and dimensions, sequence length increases from 512 to 2048. By what factor does the number of entries in a full n × n self-attention score matrix increase?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q23" value="0"><span class="choice"><span class="key">A.</span> 2×</span></label></li>
+          <li><label><input type="radio" name="q23" value="1"><span class="choice"><span class="key">B.</span> 4×</span></label></li>
+          <li><label><input type="radio" name="q23" value="2"><span class="choice"><span class="key">C.</span> 8×</span></label></li>
+          <li><label><input type="radio" name="q23" value="3"><span class="choice"><span class="key">D.</span> 16×</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-23">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-23" hidden>
+        <p class="akey"><b>Answer: D. 16×</b></p>
+        <p class="awhy">The sequence becomes 4 times longer, so the pairwise score matrix has 4² = 16 times as many entries. This is a statement about the dense pairwise matrix, not a guarantee that total runtime increases by exactly 16 times.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q24" data-answer="1">
+      <div class="qhead"><span class="num">Q24</span><span class="tag">Multiple Choice</span><span class="ref">7 · slides 44, 61</span></div>
+      <fieldset>
+        <legend class="stem">An FFN maps 512 features to 2048 and then back to 512. Ignoring biases, how many weight parameters are in these two linear transformations together?</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q24" value="0"><span class="choice"><span class="key">A.</span> 1,048,576</span></label></li>
+          <li><label><input type="radio" name="q24" value="1"><span class="choice"><span class="key">B.</span> 2,097,152</span></label></li>
+          <li><label><input type="radio" name="q24" value="2"><span class="choice"><span class="key">C.</span> 2,560</span></label></li>
+          <li><label><input type="radio" name="q24" value="3"><span class="choice"><span class="key">D.</span> 4,194,304</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-24">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-24" hidden>
+        <p class="akey"><b>Answer: B. 2,097,152</b></p>
+        <p class="awhy">The first matrix has 512×2048 = 1,048,576 weights, and the second has 2048×512 = 1,048,576. The total is 2,097,152. These matrices are shared across token positions, so sequence length does not multiply the parameter count.</p>
+      </div>
+    </article>
+  </section>
+
+  <section aria-labelledby="multiple-answer">
+    <h2 id="multiple-answer">Part 3 · Multiple Answer</h2>
+    <p class="intro">Select all correct options. A question is correct only when the selected set matches exactly.</p>
+    <article class="q" id="q25" data-answer="0,1,3">
+      <div class="qhead"><span class="num">Q25</span><span class="tag">Multiple Answer</span><span class="ref">7 · slides 31–36, 50–51</span></div>
+      <fieldset>
+        <legend class="stem">Which statements about a standard scaled dot-product attention head are correct? Assume at least one unmasked key per query and no attention dropout. Select all that apply.</legend>
+        <ul class="opts">
+          <li><label><input type="checkbox" name="q25" value="0"><span class="choice"><span class="key">A.</span> Its query, key and value projection matrices are learned parameters.</span></label></li>
+          <li><label><input type="checkbox" name="q25" value="1"><span class="choice"><span class="key">B.</span> The weights over allowed keys are nonnegative and sum to 1 for each query.</span></label></li>
+          <li><label><input type="checkbox" name="q25" value="2"><span class="choice"><span class="key">C.</span> Its attention-weight matrix must be symmetric because Q and K come from the same sequence.</span></label></li>
+          <li><label><input type="checkbox" name="q25" value="3"><span class="choice"><span class="key">D.</span> A mask can prevent selected key positions from contributing to a query’s output.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-25">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-25" hidden>
+        <p class="akey"><b>Answer: A. Its query, key and value projection matrices are learned parameters.<br>B. The weights over allowed keys are nonnegative and sum to 1 for each query.<br>D. A mask can prevent selected key positions from contributing to a query’s output.</b></p>
+        <p class="awhy">A, B and D are correct. The projections are learned, and row-wise softmax produces a distribution over allowed keys. C is false: Q and K generally use different projections, and row-wise normalization also does not enforce symmetry.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q26" data-answer="0,1">
+      <div class="qhead"><span class="num">Q26</span><span class="tag">Multiple Answer</span><span class="ref">7 · slides 46–49</span></div>
+      <fieldset>
+        <legend class="stem">Which components occur in the original encoder–decoder Transformer described in the lecture? Select all that apply.</legend>
+        <ul class="opts">
+          <li><label><input type="checkbox" name="q26" value="0"><span class="choice"><span class="key">A.</span> Encoder self-attention and position-wise feedforward sub-layers.</span></label></li>
+          <li><label><input type="checkbox" name="q26" value="1"><span class="choice"><span class="key">B.</span> Decoder causal self-attention and encoder–decoder cross-attention.</span></label></li>
+          <li><label><input type="checkbox" name="q26" value="2"><span class="choice"><span class="key">C.</span> Residual connections and layer normalization in the encoder only; the decoder has neither.</span></label></li>
+          <li><label><input type="checkbox" name="q26" value="3"><span class="choice"><span class="key">D.</span> One set of projection matrices that must be shared by every head and every layer.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-26">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-26" hidden>
+        <p class="akey"><b>Answer: A. Encoder self-attention and position-wise feedforward sub-layers.<br>B. Decoder causal self-attention and encoder–decoder cross-attention.</b></p>
+        <p class="awhy">A and B are correct. Both encoder and decoder use residual connections and layer normalization, so C is false. Different heads have their own projections, and different layers need not share parameters, so D is also false.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q27" data-answer="0,2,3">
+      <div class="qhead"><span class="num">Q27</span><span class="tag">Multiple Answer</span><span class="ref">7 · slides 42–43</span></div>
+      <fieldset>
+        <legend class="stem">Which statements about the positional encodings discussed in the lecture are correct? Select all that apply.</legend>
+        <ul class="opts">
+          <li><label><input type="checkbox" name="q27" value="0"><span class="choice"><span class="key">A.</span> Sinusoidal positional encodings can be fixed rather than learned.</span></label></li>
+          <li><label><input type="checkbox" name="q27" value="1"><span class="choice"><span class="key">B.</span> Row-wise softmax alone gives each token its absolute position index.</span></label></li>
+          <li><label><input type="checkbox" name="q27" value="2"><span class="choice"><span class="key">C.</span> Learned positional embeddings are another way to represent positions.</span></label></li>
+          <li><label><input type="checkbox" name="q27" value="3"><span class="choice"><span class="key">D.</span> When a position vector is added to a token embedding, their dimensions must match.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-27">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-27" hidden>
+        <p class="akey"><b>Answer: A. Sinusoidal positional encodings can be fixed rather than learned.<br>C. Learned positional embeddings are another way to represent positions.<br>D. When a position vector is added to a token embedding, their dimensions must match.</b></p>
+        <p class="awhy">A, C and D are correct. The slides describe both fixed sine/cosine encodings and learned position embeddings. Softmax normalizes attention scores; that operation alone does not supply absolute position information.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q28" data-answer="0,1,3">
+      <div class="qhead"><span class="num">Q28</span><span class="tag">Multiple Answer</span><span class="ref">7 · slide 74</span></div>
+      <fieldset>
+        <legend class="stem">Consider ordinary autoregressive inference in a causal Transformer decoder, with fixed model weights and a full KV cache. Which statements are correct? Select all that apply.</legend>
+        <ul class="opts">
+          <li><label><input type="checkbox" name="q28" value="0"><span class="choice"><span class="key">A.</span> Previously computed key and value vectors can be reused at later generation steps.</span></label></li>
+          <li><label><input type="checkbox" name="q28" value="1"><span class="choice"><span class="key">B.</span> The new token’s query attends to the available keys, including cached keys from earlier tokens.</span></label></li>
+          <li><label><input type="checkbox" name="q28" value="2"><span class="choice"><span class="key">C.</span> The cache makes all future generated tokens independent, so they can be sampled simultaneously.</span></label></li>
+          <li><label><input type="checkbox" name="q28" value="3"><span class="choice"><span class="key">D.</span> Appending a token does not change earlier tokens’ causal states, which enables reuse of their keys and values.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-28">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-28" hidden>
+        <p class="akey"><b>Answer: A. Previously computed key and value vectors can be reused at later generation steps.<br>B. The new token’s query attends to the available keys, including cached keys from earlier tokens.<br>D. Appending a token does not change earlier tokens’ causal states, which enables reuse of their keys and values.</b></p>
+        <p class="awhy">A, B and D are correct. Earlier positions cannot attend to newly appended future positions, so their cached keys and values remain valid. The next generated token still depends on the tokens already generated; caching does not remove this sequential dependence.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q29" data-answer="0,1,2">
+      <div class="qhead"><span class="num">Q29</span><span class="tag">Multiple Answer</span><span class="ref">7 · slides 69–73, 81–82</span></div>
+      <fieldset>
+        <legend class="stem">Which pairings of an efficiency method and its main idea are correct? Select all that apply.</legend>
+        <ul class="opts">
+          <li><label><input type="checkbox" name="q29" value="0"><span class="choice"><span class="key">A.</span> Longformer / Big Bird: use sparse attention patterns.</span></label></li>
+          <li><label><input type="checkbox" name="q29" value="1"><span class="choice"><span class="key">B.</span> Linformer: use a low-rank approach by projecting the sequence-length dimension of keys and values.</span></label></li>
+          <li><label><input type="checkbox" name="q29" value="2"><span class="choice"><span class="key">C.</span> Dense FlashAttention: reorganize computation to reduce memory transfers while computing exact attention.</span></label></li>
+          <li><label><input type="checkbox" name="q29" value="3"><span class="choice"><span class="key">D.</span> Dense FlashAttention: guarantee a linear number of query–key interactions for unrestricted attention.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-29">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-29" hidden>
+        <p class="akey"><b>Answer: A. Longformer / Big Bird: use sparse attention patterns.<br>B. Linformer: use a low-rank approach by projecting the sequence-length dimension of keys and values.<br>C. Dense FlashAttention: reorganize computation to reduce memory transfers while computing exact attention.</b></p>
+        <p class="awhy">A, B and C match the lecture. Sparse and low-rank methods change the attention computation or its connectivity. Dense FlashAttention improves memory access but still computes dense pairwise attention; it does not make the number of token pairs linear.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q30" data-answer="0,3">
+      <div class="qhead"><span class="num">Q30</span><span class="tag">Multiple Answer</span><span class="ref">7 · slides 49–51, 57</span></div>
+      <fieldset>
+        <legend class="stem">Which statements about standard encoder–decoder Transformer training for translation are correct? Select all that apply.</legend>
+        <ul class="opts">
+          <li><label><input type="checkbox" name="q30" value="0"><span class="choice"><span class="key">A.</span> Training minimizes a token-level cross-entropy loss on the target translation.</span></label></li>
+          <li><label><input type="checkbox" name="q30" value="1"><span class="choice"><span class="key">B.</span> Gradients pass through the decoder only; the encoder remains frozen throughout standard training.</span></label></li>
+          <li><label><input type="checkbox" name="q30" value="2"><span class="choice"><span class="key">C.</span> At inference, the full gold target translation is supplied as decoder input.</span></label></li>
+          <li><label><input type="checkbox" name="q30" value="3"><span class="choice"><span class="key">D.</span> During teacher-forced training, shifted target inputs and causal masking allow parallel computation across target positions.</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-30">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-30" hidden>
+        <p class="akey"><b>Answer: A. Training minimizes a token-level cross-entropy loss on the target translation.<br>D. During teacher-forced training, shifted target inputs and causal masking allow parallel computation across target positions.</b></p>
+        <p class="awhy">A and D are correct. Standard training propagates gradients through both the encoder and decoder. The loss compares predicted distributions with gold target tokens. At inference, the gold translation is unavailable; the decoder uses the generated prefix instead.</p>
+      </div>
+    </article>
+  </section>
+
+  <section aria-labelledby="true-false">
+    <h2 id="true-false">Part 4 · True / False</h2>
+    <p class="intro">Decide whether each statement is true or false.</p>
+    <article class="q" id="q31" data-answer="1">
+      <div class="qhead"><span class="num">Q31</span><span class="tag">True / False</span><span class="ref">7 · slides 14–19</span></div>
+      <fieldset>
+        <legend class="stem">A static word embedding and a contextual embedding must both assign exactly the same representation to every occurrence of the same word.</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q31" value="0"><span class="choice"><span class="key">T.</span> True</span></label></li>
+          <li><label><input type="radio" name="q31" value="1"><span class="choice"><span class="key">F.</span> False</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-31">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-31" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">False. A static lookup uses one vector per vocabulary entry. A contextual embedding can change with the surrounding tokens, allowing different uses of the same word to have different representations.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q32" data-answer="0">
+      <div class="qhead"><span class="num">Q32</span><span class="tag">True / False</span><span class="ref">7 · slides 32, 36</span></div>
+      <fieldset>
+        <legend class="stem">For a query–key dot product to be defined, the query and key dimensions must match, but the value dimension may be different.</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q32" value="0"><span class="choice"><span class="key">T.</span> True</span></label></li>
+          <li><label><input type="radio" name="q32" value="1"><span class="choice"><span class="key">F.</span> False</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-32">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-32" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">True. q·k requires equal query and key widths. The resulting scalar weights can combine value vectors of any common value width d<sub>v</sub>; that width determines the head output size.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q33" data-answer="0">
+      <div class="qhead"><span class="num">Q33</span><span class="tag">True / False</span><span class="ref">7 · slide 42</span></div>
+      <fieldset>
+        <legend class="stem">For unrestricted self-attention with shared token-wise projections, no positional information and no dropout, permuting the input token order permutes the output token order in the same way.</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q33" value="0"><span class="choice"><span class="key">T.</span> True</span></label></li>
+          <li><label><input type="radio" name="q33" value="1"><span class="choice"><span class="key">F.</span> False</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-33">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-33" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">True. This is permutation equivariance. Reordering inputs reorders queries, keys and values consistently, so the output follows the same permutation. It does not mean the ordered output matrix stays unchanged.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q34" data-answer="1">
+      <div class="qhead"><span class="num">Q34</span><span class="tag">True / False</span><span class="ref">7 · slides 32–36, 44</span></div>
+      <fieldset>
+        <legend class="stem">Self-attention is a linear function of its input embeddings simply because its output is a weighted sum of value vectors.</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q34" value="0"><span class="choice"><span class="key">T.</span> True</span></label></li>
+          <li><label><input type="radio" name="q34" value="1"><span class="choice"><span class="key">F.</span> False</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-34">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-34" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">False. The weights themselves depend on the inputs through query–key scores and softmax, so the full mapping is generally nonlinear. For fixed weights, the combination is linear in V. The FFN adds a separate nonlinear feature transformation.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q35" data-answer="1">
+      <div class="qhead"><span class="num">Q35</span><span class="tag">True / False</span><span class="ref">7 · slides 49–53</span></div>
+      <fieldset>
+        <legend class="stem">In standard offline machine translation, decoder cross-attention must causally mask later source positions to prevent access to future target tokens.</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q35" value="0"><span class="choice"><span class="key">T.</span> True</span></label></li>
+          <li><label><input type="radio" name="q35" value="1"><span class="choice"><span class="key">F.</span> False</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-35">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-35" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">False. The complete source sentence is available in offline translation, so decoder cross-attention may use all non-padding source positions. The causal restriction concerns target-side self-attention. Streaming translation can impose additional source-access constraints.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q36" data-answer="0">
+      <div class="qhead"><span class="num">Q36</span><span class="tag">True / False</span><span class="ref">7 · slides 50–51</span></div>
+      <fieldset>
+        <legend class="stem">With finite scores at allowed positions, at least one allowed key per row, and an additive −∞ mask at forbidden positions before softmax, forbidden positions receive zero attention probability.</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q36" value="0"><span class="choice"><span class="key">T.</span> True</span></label></li>
+          <li><label><input type="radio" name="q36" value="1"><span class="choice"><span class="key">F.</span> False</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-36">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-36" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">True. exp(−∞) = 0, while the allowed scores provide a positive normalization denominator. Masking before softmax excludes forbidden positions and normalizes over the allowed ones.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q37" data-answer="0">
+      <div class="qhead"><span class="num">Q37</span><span class="tag">True / False</span><span class="ref">7 · slide 48</span></div>
+      <fieldset>
+        <legend class="stem">Standard Transformer layer normalization normalizes across the feature dimensions of each token representation, rather than estimating its mean and variance across the batch.</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q37" value="0"><span class="choice"><span class="key">T.</span> True</span></label></li>
+          <li><label><input type="radio" name="q37" value="1"><span class="choice"><span class="key">F.</span> False</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-37">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-37" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">True. For each token vector, LayerNorm uses statistics across its features and then applies learned scale and shift parameters. This differs from normalization based on batch statistics.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q38" data-answer="1">
+      <div class="qhead"><span class="num">Q38</span><span class="tag">True / False</span><span class="ref">7 · slides 69–73</span></div>
+      <fieldset>
+        <legend class="stem">Dense FlashAttention is approximate because it discards small attention weights.</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q38" value="0"><span class="choice"><span class="key">T.</span> True</span></label></li>
+          <li><label><input type="radio" name="q38" value="1"><span class="choice"><span class="key">F.</span> False</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-38">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-38" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">False. Dense FlashAttention computes exact attention, up to ordinary floating-point rounding, using a different computation and memory-access schedule. Discarding selected connections belongs to sparse or approximate attention approaches.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q39" data-answer="0">
+      <div class="qhead"><span class="num">Q39</span><span class="tag">True / False</span><span class="ref">7 · slide 74</span></div>
+      <fieldset>
+        <legend class="stem">For a standard full KV cache with fixed layers, heads, dimensions and precision, caching more generated tokens increases the cache memory in proportion to the number of cached tokens.</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q39" value="0"><span class="choice"><span class="key">T.</span> True</span></label></li>
+          <li><label><input type="radio" name="q39" value="1"><span class="choice"><span class="key">F.</span> False</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-39">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-39" hidden>
+        <p class="akey"><b>Answer: True</b></p>
+        <p class="awhy">True. Each new token adds a fixed amount of key and value data per layer. For a batch of one with ordinary multi-head attention, this is proportional to L×h×n×(d<sub>k</sub>+d<sub>v</sub>) stored elements. The speed benefit comes with growing cache storage.</p>
+      </div>
+    </article>
+
+    <article class="q" id="q40" data-answer="1">
+      <div class="qhead"><span class="num">Q40</span><span class="tag">True / False</span><span class="ref">7 · slides 45, 63</span></div>
+      <fieldset>
+        <legend class="stem">Because Transformers are easier to parallelize than LSTMs, a Transformer is guaranteed to run faster and use fewer parameters for every task and sequence length.</legend>
+        <ul class="opts">
+          <li><label><input type="radio" name="q40" value="0"><span class="choice"><span class="key">T.</span> True</span></label></li>
+          <li><label><input type="radio" name="q40" value="1"><span class="choice"><span class="key">F.</span> False</span></label></li>
+        </ul>
+      </fieldset>
+      <button class="reveal" type="button" aria-expanded="false" aria-controls="answer-40">Show Answer</button>
+      <p class="feedback" hidden></p>
+      <div class="ans" id="answer-40" hidden>
+        <p class="akey"><b>Answer: False</b></p>
+        <p class="awhy">False. Parallelism is an architectural advantage, but runtime also depends on sequence length, model size, hardware, kernels and whether the model is training or generating. Parameter count depends on the chosen architecture; dense self-attention also has quadratic pairwise cost.</p>
+      </div>
+    </article>
+  </section>
+  <div class="toolbar"><a class="chip" href="#">Back to top ↑</a><a class="chip" href="../../">All demos &amp; quizzes →</a></div>
+  <footer>
+    <p>APAI4011 · Lecture 7 self-check quiz · Based on the Self-Attention &amp; Transformer lecture slides</p>
+    <p>Further reading:
+      <a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a> ·
+      <a href="https://arxiv.org/abs/2205.14135">FlashAttention</a> ·
+      <a href="https://huggingface.co/docs/transformers/cache_explanation">KV caching</a>
+    </p>
+    <p>Self-contained HTML · No external libraries · Print with answers hidden for a question sheet, or shown for an answer key.</p>
+  </footer>
+</main>
+<script>
+  const questions = Array.from(document.querySelectorAll('.q'));
+  const score = document.getElementById('score');
+  function reveal(q, show) {
+    const box = q.querySelector('.ans'), button = q.querySelector('.reveal');
+    box.hidden = !show;
+    button.setAttribute('aria-expanded', String(show));
+    button.textContent = show ? 'Hide Answer' : 'Show Answer';
+  }
+  questions.forEach(q => {
+    q.querySelector('.reveal').addEventListener('click', () => reveal(q, q.querySelector('.ans').hidden));
+    q.addEventListener('change', () => {
+      q.querySelector('.feedback').hidden = true;
+      if (!score.hidden) score.textContent = 'Answers changed. Select “Check My Answers” to update your score.';
+    });
+  });
+  document.getElementById('showAll').addEventListener('click', () => questions.forEach(q => reveal(q, true)));
+  document.getElementById('hideAll').addEventListener('click', () => questions.forEach(q => reveal(q, false)));
+  document.getElementById('checkAnswers').addEventListener('click', () => {
+    let correct = 0, answered = 0;
+    questions.forEach(q => {
+      const selected = Array.from(q.querySelectorAll('input:checked'), input => input.value);
+      const feedback = q.querySelector('.feedback');
+      const attempted = selected.length > 0;
+      const match = attempted && selected.join(',') === q.dataset.answer;
+      if (attempted) answered++;
+      if (match) correct++;
+      feedback.className = 'feedback ' + (!attempted ? 'unanswered' : match ? 'correct' : 'incorrect');
+      feedback.textContent = !attempted ? 'Not answered.' : match ? 'Correct.' : 'Incorrect. Use “Show Answer” to review the explanation.';
+      feedback.hidden = false;
+    });
+    score.textContent = 'Score: ' + correct + ' / ' + questions.length + '. Answered: ' + answered + ' / ' + questions.length + '. Unanswered: ' + (questions.length - answered) + '. Each question is worth one point; multiple-answer questions require all and only the correct options.';
+    score.hidden = false;
+    score.focus();
+  });
+  document.getElementById('resetQuiz').addEventListener('click', () => {
+    questions.forEach(q => {
+      q.querySelectorAll('input').forEach(input => { input.checked = false; });
+      q.querySelector('.feedback').hidden = true;
+      reveal(q, false);
+    });
+    score.hidden = false;
+    score.textContent = 'Quiz reset. All selections and feedback have been cleared.';
+  });
+</script>
+</body>
+</html>
