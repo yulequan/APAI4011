@@ -44,3 +44,14 @@ GitHub Pages publishes the files directly from the root of the `main` branch.
 Create `tests/lecture-NN-<topic>/index.html` (a question page whose answers toggle
 open, in the same style as the existing quiz), then add a matching card to the
 `Testing` section of `index.html`.
+
+## Lecture 7 interactive labs
+
+- [Self-Attention, Step by Step](https://yulequan.github.io/APAI4011/demos/self-attention/)
+- [Multi-Head Attention](https://yulequan.github.io/APAI4011/demos/multi-head-attention/)
+- [KV Cache: Compute Once, Reuse](https://yulequan.github.io/APAI4011/demos/kv-cache/)
+- [Self vs. Cross Attention](https://yulequan.github.io/APAI4011/demos/self-vs-cross-attention/)
+
+Each lab is one standalone HTML file with inline CSS and vanilla JavaScript. There are no runtime dependencies, package installation, or build steps. Open a page directly or serve the repository with any static server. GitHub Pages continues to publish `main` from the repository root.
+
+The vectors and projections are hand-set teaching examples. The Self-Attention default reproduces the lecture’s scaled scores of 14 and 12 with compact four-dimensional queries and keys; it does not reproduce the slide’s 64-dimensional projections. KV Cache compares actual one-layer attention outputs and counts K/V vector projections, including prefill; it does not sample from a trained language model or benchmark GPU speed.
